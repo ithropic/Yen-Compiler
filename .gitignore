@@ -1,0 +1,14 @@
+target/
+*.class
+.idea/
+*.iml
+.vscode/
+
+#Vim/Neovim artifacts
+*.swp
+*.swp
+*~
+.neetrwhist
+Session.vim
+
+
