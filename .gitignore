@@ -11,4 +11,7 @@ target/
 .neetrwhist
 Session.vim
 
+# test  files
+test_sources/
+
 

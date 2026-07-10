@@ -1,4 +1,4 @@
-package com.rayen.compiler;
+package com.yen.compiler;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
