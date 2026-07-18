@@ -137,7 +137,7 @@ class Parser {
     throw error(peek(), message);
   }
    
-  }
+  
   private ParseError error(Token token, String message) {
     Compiler.error(token, message);
     return new ParseError();

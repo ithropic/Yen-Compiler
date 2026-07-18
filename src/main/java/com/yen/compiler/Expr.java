@@ -2,6 +2,7 @@ package com.yen.compiler;
 import java.util.List;
 
 abstract class Expr {
+  Type type = null;
   interface Visitor<R> {
     R   visitBinaryExpr(Binary expr);
     R   visitGroupingExpr(Grouping expr);
