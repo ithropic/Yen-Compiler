@@ -15,14 +15,27 @@ public class GenerateAst {
     /*  Defining the main AST class that contains subclasses for each expression type.
      *  we'll do that using a script to generate each subclass, its constructor and its fields declartations */
     defineAst(outputDir, "Expr", Arrays.asList(
+          "Assign   : Token name, Expr value",
           "Binary   : Expr left, Token operator, Expr right",
           "Grouping : Expr expression",
           "Unary    : Token operator, Expr right",
-          "Literal  : Object value"
+          "Logical  : Expr left, Token operator, Expr right",
+          "Literal  : Object value",
+          "Variable : Token name"
+          ));
+
+    defineAst(outputDir, "Stmt", Arrays.asList(
+          "Block      : List<Stmt> statements",
+          "Expression : Expr expression",
+          "If         : Expr condition, Stmt thenBranch,"
+                        + " Stmt elseBranch", // the plus is for string concat, to not get a single long line like this one lol.
+          "Print      : Expr expression",
+          "Var        : Type type, Token name, Expr initializer",
+          "While      : Expr condition, Stmt body"
           ));
   }
 
-  private static void defineAst(String outputDir, String baseName,
+      private static void defineAst(String outputDir, String baseName,
       List<String> types) throws IOException {
     String path = outputDir + "/" + baseName + ".java";
 

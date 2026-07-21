@@ -5,7 +5,7 @@ enum Type {
   DOUBLE,
   VOID, // function return type.
   BOOL,
-  STIRNG,
+  STRING,
   ERROR // sentinel used when type checking fails on a node
         // to avoid cascading errors.
 }
