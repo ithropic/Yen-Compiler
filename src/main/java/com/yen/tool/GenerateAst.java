@@ -1,4 +1,4 @@
-package com.yen.tool;
+ package com.yen.tool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,6 +17,7 @@ public class GenerateAst {
     defineAst(outputDir, "Expr", Arrays.asList(
           "Assign   : Token name, Expr value",
           "Binary   : Expr left, Token operator, Expr right",
+          "Call     : Expr callee, Token paren, List<Expr> arguments",
           "Grouping : Expr expression",
           "Unary    : Token operator, Expr right",
           "Logical  : Expr left, Token operator, Expr right",
@@ -27,9 +28,11 @@ public class GenerateAst {
     defineAst(outputDir, "Stmt", Arrays.asList(
           "Block      : List<Stmt> statements",
           "Expression : Expr expression",
+          "Function   : Type type, Token name, List<Parameter> params, List<Stmt> body",
           "If         : Expr condition, Stmt thenBranch,"
                         + " Stmt elseBranch", // the plus is for string concat, to not get a single long line like this one lol.
           "Print      : Expr expression",
+          "Return     : Token keyword, Expr value",
           "Var        : Type type, Token name, Expr initializer",
           "While      : Expr condition, Stmt body"
           ));
@@ -104,5 +107,3 @@ public class GenerateAst {
 
   }
 }
-
-

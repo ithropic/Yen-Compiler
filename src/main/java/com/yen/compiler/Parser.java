@@ -33,9 +33,15 @@ class Parser {
 
   private Stmt declaration() {
     try {
-    if (match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOL))
+    if (match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOL, TokenType.VOID))
         {
-          return varDeclaration();
+          Type type = getType(previous());
+          Token name = consume(IDENTIFIER, "Expect identifier in a declaration.");
+          if (check(LEFT_PAREN)) {
+              return funDecl(type, name);
+          } else {
+            return varDeclaration(type, name);
+          }
         }
     
     return statement();
@@ -49,6 +55,7 @@ class Parser {
     if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
     if (match(PRINT)) return printStatement();
+    if (match(RETURN)) return returnStatement();
     if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
@@ -62,7 +69,9 @@ class Parser {
       initializer = null;
     }
      else if (matchType()) {
-      initializer = varDeclaration();
+       Type type = getType(previous());
+       Token name = consume(IDENTIFIER, "Expect identifier after type.");
+      initializer = varDeclaration(type, name);
     } 
     else {
       initializer = expressionStatement();
@@ -118,9 +127,19 @@ class Parser {
     return new Stmt.Print(value);
   }
 
-  private Stmt varDeclaration() {
-    Type type = getType(previous());
-    Token name = consume(IDENTIFIER, "Expect variable name.");
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    
+    Expr value = null;
+    if (!check(SEMICOLON)) {
+       value = expression();
+    }
+
+    consume(SEMICOLON, "Expect ';' after return statement.");
+    return new Stmt.Return(keyword, value);
+  }
+
+  private Stmt varDeclaration(Type type, Token name) {
     
     Expr initializer = null;
     if (match(EQUAL)) {
@@ -130,6 +149,30 @@ class Parser {
 
     return new Stmt.Var(type, name, initializer);
   }
+
+  private Stmt.Function funDecl(Type type, Token name) {
+    consume(LEFT_PAREN, "Expect '(' after function name."); // this error is never going to happen btw.
+    List<Parameter> parameters = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Arguments limit reached (255 max).");
+        }
+        Type paramType = getType(peek());
+        if (!matchType()) {
+          throw error(peek(), "Expect parameter type.");
+        }
+        Token paramName = consume(IDENTIFIER, "Expect parameter name.");
+        parameters.add(new Parameter(paramType, paramName));
+      } while (match(COMMA));
+    }
+    consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+      consume(LEFT_BRACE, "Expect '{' before function body.");
+      List<Stmt> body = block();
+      return new Stmt.Function(type, name, parameters, body);
+  }
+
 
   private Stmt whileStatement() {
     consume(LEFT_PAREN, "Expect '(' after while.");
@@ -257,7 +300,38 @@ class Parser {
       Expr right = unary();
       return new Expr.Unary(operator, right);
     } 
-    return primary();
+    return call();
+  }
+
+  private Expr finishCall(Expr callee) {
+    List<Expr> arguments = new ArrayList<>();
+      if (!check(RIGHT_PAREN)) {
+        do {
+          if (arguments.size() >= 255) {
+            error(peek(), "Arguments limit reached (255 max).");
+          }
+        arguments.add(expression());
+      } while (match(COMMA));
+    }
+      
+    Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+    return new Expr.Call(callee, paren, arguments); 
+  } 
+    
+  private Expr call() {
+    Expr expr = primary();
+
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+       } else {
+           break;
+         }
+      }
+    
+    return expr;
+    
   }
 
   private Expr primary() { // if match found then create new Expr node of type Literal.
@@ -312,6 +386,15 @@ class Parser {
 
   private Token consume(TokenType type, String message) {
     if (check(type)) return advance();
+
+    throw error(peek(), message);
+  }
+
+  private Token consumeType(String message) { // consume method to handle
+                                              // static Types.
+    if (matchType()) {
+      return previous();
+    }
 
     throw error(peek(), message);
   }
