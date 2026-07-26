@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenerateAst {
+/*public class GenerateAst {
   public static void main(String args[]) throws IOException {
     if (args.length != 1) {
       System.err.println("Usage: generate_ast <output directory>");
@@ -14,7 +14,7 @@ public class GenerateAst {
     String outputDir = args[0];
     /*  Defining the main AST class that contains subclasses for each expression type.
      *  we'll do that using a script to generate each subclass, its constructor and its fields declartations */
-    defineAst(outputDir, "Expr", Arrays.asList(
+  /*  defineAst(outputDir, "Expr", Arrays.asList(
           "Assign   : Token name, Expr value",
           "Binary   : Expr left, Token operator, Expr right",
           "Call     : Expr callee, Token paren, List<Expr> arguments",
@@ -106,4 +106,4 @@ public class GenerateAst {
 
 
   }
-}
+} */

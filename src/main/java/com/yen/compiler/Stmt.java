@@ -54,6 +54,7 @@ return visitor.visitFunctionStmt(this);
     final Token name;
     final List<Parameter> params;
     final List<Stmt> body;
+    Symbol symbol;
 }
     static class If extends Stmt {
     If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
@@ -112,6 +113,7 @@ return visitor.visitVarStmt(this);
     final Type type;
     final Token name;
     final Expr initializer;
+    Symbol symbol;
 }
     static class While extends Stmt {
     While(Expr condition, Stmt body) {

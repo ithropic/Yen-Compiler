@@ -414,6 +414,7 @@ class Parser {
       case DOUBLE : return Type.DOUBLE;
       case STRING : return Type.STRING;
       case BOOL   : return Type.BOOL;
+      case VOID   : return Type.VOID;
       default : return Type.ERROR;
     } 
     }

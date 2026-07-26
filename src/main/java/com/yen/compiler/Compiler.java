@@ -36,8 +36,12 @@ public class Compiler {
     Parser parser = new Parser(tokens);
 
     List<Stmt> statements = parser.parse();
-
     if (hadError) return;
+
+    Resolver resolver = new Resolver();
+    resolver.resolveProgram(statements);
+    if (hadError) return;
+
 
     System.out.println(statements);
     
@@ -56,7 +60,7 @@ public class Compiler {
       if (token.type ==  TokenType.EOF) {
         report(token.line, " at end", message);
       } else {
-        report(token.line, "at '" + token.lexeme + "'", message);
+        report(token.line, " at '" + token.lexeme + "'", message);
       }
     }
 

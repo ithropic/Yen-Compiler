@@ -28,6 +28,7 @@ return visitor.visitAssignExpr(this);
 
     final Token name;
     final Expr value;
+    Symbol symbol;
 }
     static class Binary extends Expr {
     Binary(Expr left, Token operator, Expr right) {
@@ -126,6 +127,7 @@ return visitor.visitVariableExpr(this);
     }
 
     final Token name;
+    Symbol symbol;
 }
 
   abstract <R> R accept(Visitor<R> visitor);
