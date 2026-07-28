@@ -17,7 +17,7 @@ import java.util.List;
   /*  defineAst(outputDir, "Expr", Arrays.asList(
           "Assign   : Token name, Expr value",
           "Binary   : Expr left, Token operator, Expr right",
-          "Call     : Expr callee, Token paren, List<Expr> arguments",
+          "Call     : Expr.Variable callee, Token paren, List<Expr> arguments",
           "Grouping : Expr expression",
           "Unary    : Token operator, Expr right",
           "Logical  : Expr left, Token operator, Expr right",

@@ -303,7 +303,7 @@ class Parser {
     return call();
   }
 
-  private Expr finishCall(Expr callee) {
+  private Expr finishCall(Expr.Variable callee) {
     List<Expr> arguments = new ArrayList<>();
       if (!check(RIGHT_PAREN)) {
         do {
@@ -317,21 +317,20 @@ class Parser {
     Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
 
     return new Expr.Call(callee, paren, arguments); 
-  } 
+  }
     
   private Expr call() {
     Expr expr = primary();
 
-    while (true) {
       if (match(LEFT_PAREN)) {
-        expr = finishCall(expr);
-       } else {
-           break;
-         }
+        if (!(expr instanceof Expr.Variable calleeVar)) {
+          error(previous(), "Function can only be called by name.");
+          return expr;
+        }
+        expr = finishCall(calleeVar);
       }
-    
+
     return expr;
-    
   }
 
   private Expr primary() { // if match found then create new Expr node of type Literal.

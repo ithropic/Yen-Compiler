@@ -1,6 +1,7 @@
 package com.yen.compiler;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +157,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       return null;
     }
     Symbol sym = globals.get(stmt.name.lexeme);
+
+    List<Type> paramTypes = new ArrayList<>();
+    for (Parameter p : stmt.params) {
+      paramTypes.add(p.type());
+    }
+    sym.paramTypes = paramTypes;
+
     stmt.symbol = sym;
 
     int savedNextLocalSlot = nextLocalSlot;

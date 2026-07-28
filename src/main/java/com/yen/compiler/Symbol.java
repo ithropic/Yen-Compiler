@@ -1,5 +1,7 @@
 package com.yen.compiler;
 
+import java.util.List;
+
 class Symbol {
   final String name;
   final Type type;
@@ -7,6 +9,7 @@ class Symbol {
   final int scopeDepth;
   final int slotIndex;
   boolean ready;
+  List<Type> paramTypes; // only used if Kind == FUNCTION; null otherwise.
 
   enum Kind { VARIABLE, PARAMETER, FUNCTION }
 

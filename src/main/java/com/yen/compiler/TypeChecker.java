@@ -1,0 +1,249 @@
+package com.yen.compiler;
+
+import java.util.List;
+
+
+class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
+
+
+  // to keep track of the the current function return type inorder to 
+  // compare it to with the type of the return statement.
+  // null if we aren't inisde any function.
+  private Type currentFunctionReturnType = null;
+
+  void check(List<Stmt> statements) {
+    for (Stmt stmt : statements) {
+      check(stmt);
+    }
+  }
+
+  void check(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  void check(Expr expr) {
+    expr.accept(this);
+  }
+
+  private void error(Token token, String message) {
+    Compiler.error(token, message);
+  }
+
+
+  @Override
+  public Void visitLiteralExpr(Expr.Literal expr) {
+    expr.type = switch(expr.value) {
+      case Integer i -> Type.INT;
+      case Double d -> Type.DOUBLE;
+      case String s -> Type.STRING;
+      case Boolean b -> Type.BOOL;
+      default -> Type.ERROR;
+    };
+    return null;
+  }
+
+  @Override
+  public Void visitVariableExpr(Expr.Variable expr) {
+    if (expr.type == null || expr.type == Type.ERROR) {
+      throw new IllegalStateException("Variable node reached type checker with invalid type: " + expr.name.lexeme);
+    }
+    return null;
+  }
+
+  @Override
+  public Void visitAssignExpr(Expr.Assign expr) {
+    check(expr.value);
+
+    if (expr.symbol == null) {
+      return null;
+    }
+
+    Type declaredType = expr.symbol.type;
+    Type valueType = expr.value.type;
+
+    if (!isAssignable(valueType, declaredType)) {
+      error(expr.name, "Type mismatch: cannot assign " + valueType + " to variable of type " + declaredType);
+      expr.type = Type.ERROR;
+    } else {
+      expr.type = declaredType;
+    }
+    
+    return null;
+  }
+
+  private boolean isAssignable(Type from, Type to) {
+    if (from == to) return true;
+    if (from == Type.INT && to == Type.DOUBLE) return true;
+    return false;
+  }
+
+  @Override
+  public Void visitBinaryExpr(Expr.Binary expr) {
+    check(expr.left);
+    check(expr.right);
+
+    Type leftType = expr.left.type;
+    Type rightType = expr.right.type;
+    TokenType op = expr.operator.type;
+
+    switch(op) {
+      case TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH -> {
+
+        if (op == TokenType.PLUS && leftType == Type.STRING && rightType == Type.STRING) {
+          expr.type = Type.STRING;
+          return null;
+        }
+
+        if (isNumber(leftType) && isNumber(rightType)) {
+        
+        if (leftType == Type.DOUBLE || rightType == Type.DOUBLE) {
+          expr.type = Type.DOUBLE;
+          return null;
+        }
+          expr.type = Type.INT;
+          return null;
+        }
+        
+        error(expr.operator, "Operands must be two numbers or two strings.");
+      }
+
+      case TokenType.LESS, TokenType.LESS_EQUAL, TokenType.GREATER, TokenType.GREATER_EQUAL -> {
+        if (isNumber(leftType) && isNumber(rightType)) {
+          expr.type = Type.BOOL;
+          return null;
+        }
+        error(expr.operator, "Comparison must happen between numbers.");
+      }
+
+      case TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL -> {
+        if (isNumber(leftType) && isNumber(rightType)) {
+            expr.type = Type.BOOL;
+            return null;
+         }
+        if (leftType == rightType) {
+          expr.type = Type.BOOL;
+          return null;
+        }
+
+        error(expr.operator, "Both operands must be of the same type.");
+        }
+    }
+
+    return null;
+  }
+
+  private boolean isNumber(Type type) {
+    return type == Type.INT || type == Type.DOUBLE;
+  }
+
+  @Override
+  public Void visitUnaryExpr(Expr.Unary expr) {
+    check(expr.right);
+    if (expr.operator.type == TokenType.BANG){
+      if (expr.right.type == Type.BOOL) {
+        expr.type = expr.right.type;
+        return null;
+      }
+      error(expr.operator, "Negation requires a boolean type.");
+      
+    } else if (expr.operator.type == TokenType.MINUS) {
+
+      if (isNumber(expr.right.type)){
+        expr.type = expr.right.type;
+        return null;
+      }
+      error(expr.operator, "Cannot get the negative of a non number type.");
+    }
+
+    return null;
+  }
+
+  @Override
+  public Void visitLogicalExpr(Expr.Logical expr) {
+    check(expr.left);
+    check(expr.right);
+
+    Type leftType = expr.left.type;
+    Type rightType = expr.right.type;
+
+    if ((leftType == Type.BOOL) && (rightType == Type.BOOL)) {
+      expr.type = leftType;
+      return null;
+    }
+
+    error(expr.operator, "Both operands must evaluate to a boolean type.");
+    return null;
+  }
+
+  @Override
+  public Void visitGroupingExpr(Expr.Grouping expr) {
+    check(expr.expression);
+    expr.type = expr.expression.type;
+    return null;
+  }
+
+  @Override
+  public Void visitCallExpr(Expr.Call expr) {
+    check(expr.callee);
+    for (Expr argument : expr.arguments) {
+      check(argument);
+    }
+
+    if (expr.callee.symbol.kind != Symbol.Kind.FUNCTION) {
+      error(expr.paren, "Can't call a non-function object.");
+      return null;
+    }
+    if (expr.arguments.size() != expr.callee.symbol.paramTypes.size()) {
+      error(expr.paren, "Argument count mismatch.");
+      return null;
+    }
+    
+    for (int i = 0; i < expr.callee.symbol.paramTypes.size(); i++) {
+      if (!isAssignable(expr.arguments.get(i).type, expr.callee.symbol.paramTypes.get(i))) {
+        error(expr.paren, "Argument type incompatible with function's parameter type.");
+        return null;
+      }
+    }
+    expr.type = expr.callee.symbol.type;
+    return null;
+  }
+
+  @Override
+  public Void visitReturnStmt(Stmt.Return stmt) {
+    if (stmt.value != null) {
+
+      if (currentFunctionReturnType == Type.VOID) {
+        error(stmt.keyword, "Cannot return a value from a void function.");
+        return null;
+      }
+
+      check(stmt.value);
+      if (!isAssignable(stmt.value.type, currentFunctionReturnType)) {
+        error(stmt.keyword, "Return type incompatible with function's return type.");
+        return null;
+      }
+    } else {
+        if (currentFunctionReturnType != Type.VOID) {
+          error(stmt.keyword, "Return value: " + currentFunctionReturnType + " expected from a non void function.");
+          return null;
+        }
+      }
+    
+    return null;
+  }
+
+  @Override
+  public Void visitFunctionStmt(Stmt.Function stmt) {
+
+    Type savedReturnType = currentFunctionReturnType;
+    currentFunctionReturnType = stmt.type;
+
+    for (Stmt statement : stmt.body) {
+      check(statement);
+    }
+    currentFunctionReturnType = savedReturnType;
+
+    return null;
+  }
+
+}

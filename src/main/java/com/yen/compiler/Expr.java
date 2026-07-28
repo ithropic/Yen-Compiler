@@ -47,7 +47,7 @@ return visitor.visitBinaryExpr(this);
     final Expr right;
 }
     static class Call extends Expr {
-    Call(Expr callee, Token paren, List<Expr> arguments) {
+    Call(Expr.Variable callee, Token paren, List<Expr> arguments) {
       this.callee = callee;
       this.paren = paren;
       this.arguments = arguments;
@@ -58,7 +58,7 @@ return visitor.visitBinaryExpr(this);
 return visitor.visitCallExpr(this);
     }
 
-    final Expr callee;
+    final Expr.Variable callee;
     final Token paren;
     final List<Expr> arguments;
 }
