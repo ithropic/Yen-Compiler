@@ -89,7 +89,7 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     switch(op) {
       case TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH -> {
 
-        if (op == TokenType.PLUS && leftType == Type.STRING && rightType == Type.STRING) {
+        if (op == TolenType.PLUS && leftType == Type.STRING && rightType == Type.STRING) {
           expr.type = Type.STRING;
           return null;
         }
@@ -247,7 +247,7 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Void visitExpressionStmt(Stmt.Expression stmt) {
+  public Void visistExpressionStmt(Stmt.Expression stmt) {
     check(stmt.expression);
     return null;
   }
@@ -260,35 +260,30 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override 
   public Void visitBlockStmt(Stmt.Block stmt) {
-    for (Stmt statement : stmt.statements) {
-      check(statement);
+    for (Stmt stmt : stmt.statements) {
+      check(stmt);
+      return null;
     }
-    
-    return null;
   }
 
   @Override
   public Void visitIfStmt(Stmt.If stmt) {
     check(stmt.condition);
-    if (stmt.condition.type != Type.BOOL) {
-      error(stmt.keyword, "If condition must evaluate to a boolean.");
-    }
-
-    check(stmt.thenBranch);
+    if (stmt.condition.type == Type.BOOL) {
+      check(stmt.thenBranch);
       if (stmt.elseBranch != null) {
         check(stmt.elseBranch);
       }
-
-      return null;
+    }
+    return null;
   }
 
   @Override
   public Void visitWhileStmt(Stmt.While stmt) {
     check(stmt.condition);
-    if (stmt.condition.type != Type.BOOL) {
-      error(stmt.keyword, "While condition must evaluate to a boolean.");
+    if (stmt.condition.type == Type.BOOL) {
+      check(stmt.body);
     }
-    check(stmt.body);
     return null;
   }
 
@@ -297,8 +292,8 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     if (stmt.initializer != null) {
       check(stmt.initializer);
 
-      if (!isAssignable(stmt.initializer.type, stmt.type)) {
-        error(stmt.name, "Variable initialized with an incompatible type.");
+      if (isAssignable(stmt.inittializer.type, stmt.type)) {
+        error(name, "Variable initialized with an incompatible type.");
       }
     }
 

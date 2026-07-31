@@ -42,9 +42,12 @@ public class Compiler {
     resolver.resolveProgram(statements);
     if (hadError) return;
 
+    TypeChecker typeChecker = new TypeChecker();
+    typeChecker.check(statements);
+    if (hadError) return;
 
-    System.out.println(statements);
-    
+
+    new TypeDumper().dump(statements);
   }
 
   static void error(int line, String message) {

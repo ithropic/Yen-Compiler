@@ -63,6 +63,7 @@ class Parser {
   }
 
   private Stmt forStatement() {
+    Token keyword = previous();
     consume(LEFT_PAREN, "Expect '(' after for.");
     Stmt initializer;
     if (match(SEMICOLON)) {
@@ -98,7 +99,7 @@ class Parser {
     }
 
     if (condition == null) condition = new Expr.Literal(true);
-    body = new Stmt.While(condition, body);
+    body = new Stmt.While(condition, body, keyword);
 
     if (initializer != null) {
       body = new Stmt.Block(Arrays.asList(initializer, body));
@@ -106,7 +107,9 @@ class Parser {
     
     return body;
   }
+
   private Stmt ifStatement() {
+    Token keyword = previous();
     consume(LEFT_PAREN, "Expect '(' after if.");
     Expr condition = expression();
     consume(RIGHT_PAREN, "Expect ')' after condition.");
@@ -117,7 +120,7 @@ class Parser {
       elseBranch = statement();
     }
 
-    return new Stmt.If(condition, thenBranch, elseBranch);
+    return new Stmt.If(condition, thenBranch, elseBranch, keyword);
   }
 
   private Stmt printStatement() {
@@ -175,12 +178,13 @@ class Parser {
 
 
   private Stmt whileStatement() {
+    Token keyword = previous();
     consume(LEFT_PAREN, "Expect '(' after while.");
     Expr condition = expression();
     consume(RIGHT_PAREN, "Expect ')' after condition.");
     Stmt body = statement();
 
-    return new Stmt.While(condition, body); 
+    return new Stmt.While(condition, body, keyword); 
   }
 
   private Stmt expressionStatement() {
@@ -247,7 +251,7 @@ class Parser {
 
     // multiple recursive calls mirroring the laguage's grammar rules.
   private Expr expression() {
-    return equality();
+    return assignment();
   }
 
 

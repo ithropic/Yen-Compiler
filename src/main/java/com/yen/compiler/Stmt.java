@@ -57,10 +57,11 @@ return visitor.visitFunctionStmt(this);
     Symbol symbol;
 }
     static class If extends Stmt {
-    If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
+    If(Expr condition, Stmt thenBranch, Stmt elseBranch, Token keyword) {
       this.condition = condition;
       this.thenBranch = thenBranch;
       this.elseBranch = elseBranch;
+      this.keyword = keyword;
 }
 
      @Override
@@ -71,6 +72,7 @@ return visitor.visitIfStmt(this);
     final Expr condition;
     final Stmt thenBranch;
     final Stmt elseBranch;
+    final Token keyword;
 }
     static class Print extends Stmt {
     Print(Expr expression) {
@@ -116,9 +118,10 @@ return visitor.visitVarStmt(this);
     Symbol symbol;
 }
     static class While extends Stmt {
-    While(Expr condition, Stmt body) {
+    While(Expr condition, Stmt body, Token keyword) {
       this.condition = condition;
       this.body = body;
+      this.keyword = keyword;
 }
 
      @Override
@@ -128,6 +131,7 @@ return visitor.visitWhileStmt(this);
 
     final Expr condition;
     final Stmt body;
+    final Token keyword;
 }
 
   abstract <R> R accept(Visitor<R> visitor);

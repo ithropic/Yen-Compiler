@@ -30,11 +30,11 @@ import java.util.List;
           "Expression : Expr expression",
           "Function   : Type type, Token name, List<Parameter> params, List<Stmt> body",
           "If         : Expr condition, Stmt thenBranch,"
-                        + " Stmt elseBranch", // the plus is for string concat, to not get a single long line like this one lol.
+                        + " Stmt elseBranch, Token keyword", // the plus is for string concat, to not get a single long line like this one lol.
           "Print      : Expr expression",
           "Return     : Token keyword, Expr value",
           "Var        : Type type, Token name, Expr initializer",
-          "While      : Expr condition, Stmt body"
+          "While      : Expr condition, Stmt body, Token keyword"
           ));
   }
 
