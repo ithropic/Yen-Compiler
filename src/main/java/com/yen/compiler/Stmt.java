@@ -14,8 +14,9 @@ abstract class Stmt {
     R   visitWhileStmt(While stmt);
   }
     static class Block extends Stmt {
-    Block(List<Stmt> statements) {
+    Block(List<Stmt> statements, int exitBraceLine) {
       this.statements = statements;
+      this.exitBraceLine = exitBraceLine;
 }
 
      @Override
@@ -24,6 +25,7 @@ return visitor.visitBlockStmt(this);
     }
 
     final List<Stmt> statements;
+    final int exitBraceLine; // line number of the brace ending the block.
 }
     static class Expression extends Stmt {
     Expression(Expr expression, int line) {

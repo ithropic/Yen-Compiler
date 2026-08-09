@@ -1,9 +1,11 @@
 package com.yen.compiler;
 
+import java.util.ArrayDeque;
 import java.util.List;
 
 class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private Chunk chunk;
+  private final ArrayDeque<Integer> localCountStack = new ArrayDeque<>();
 
   Chunk compile(List<Stmt> statements) {
     chunk = new Chunk();
@@ -156,6 +158,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       emitBytes(OpCode.OP_DEFINE_GLOBAL, toByte(stmt.symbol.slotIndex, "slot"), stmt.name.line);
     } else {
       emitBytes(OpCode.OP_DEFINE_LOCAL, toByte(stmt.symbol.slotIndex, "slot"), stmt.name.line);
+      localCountStack.push(localCountStack.pop() + 1);
     }
     return null;
   }
@@ -204,8 +207,15 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
-    throw new UnsupportedOperationException("Not yet implemented.");
-
+    localCountStack.push(0);
+    for (Stmt statement : stmt.statements) {
+      compile(statement);
+    }
+    int count = localCountStack.pop();
+    for (int i = 0; i < count; i++) {
+      emitByte(OpCode.OP_POP, stmt.exitBraceLine);
+    }
+    return null;
   }
   
   @Override

@@ -100,6 +100,21 @@ class VM {
          globals[slot] = peek();
          break; 
        }
+       case OpCode.OP_DEFINE_LOCAL: {
+        readByte(); // read the operand  byte.
+        break; // we have nothing to do, since locals sit directly on the stack
+               // the initializer value will be naturally sitting on the right slot index.
+       }
+       case OpCode.OP_GET_LOCAL: {
+         int slot = readByte() & 0xFF;
+         push(stack[slot]);
+         break;
+       }
+       case OpCode.OP_SET_LOCAL: {
+         int slot = readByte() & 0xFF;
+         stack[slot] = peek();
+         break;
+       }
 
         
      }

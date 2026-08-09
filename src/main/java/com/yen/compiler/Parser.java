@@ -57,7 +57,7 @@ class Parser {
     if (match(PRINT)) return printStatement();
     if (match(RETURN)) return returnStatement();
     if (match(WHILE)) return whileStatement();
-    if (match(LEFT_BRACE)) return new Stmt.Block(block());
+    if (match(LEFT_BRACE)) return new Stmt.Block(block(), previous().line);
 
     return expressionStatement();
   }
@@ -92,9 +92,9 @@ class Parser {
 
     Stmt body = statement();
     // "desugaring" transforming the for loop into a while loop because we practically
-    // dont need for loops they are just somtimes nicer to write (syntaxic sugar)."
+    // dont need for loops they are just somtimes nicer to write (syntactic sugar)."
     if (increment != null) {
-      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment, keyword.line)));
+      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment, keyword.line)), keyword.line);
       // if there is an increment expression add it to the end of the body.
     }
 
@@ -102,7 +102,7 @@ class Parser {
     body = new Stmt.While(condition, body, keyword);
 
     if (initializer != null) {
-      body = new Stmt.Block(Arrays.asList(initializer, body));
+      body = new Stmt.Block(Arrays.asList(initializer, body), keyword.line);
     }
     
     return body;

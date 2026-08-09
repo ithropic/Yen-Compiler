@@ -62,6 +62,12 @@ class Debug {
         return byteInstruction("OP_GET_GLOBAL", chunk, offset);
       case OpCode.OP_SET_GLOBAL:
         return byteInstruction("OP_SET_GLOBAL", chunk, offset);
+      case OpCode.OP_DEFINE_LOCAL:
+        return byteInstruction("OP_DEFINE_LOCAL", chunk, offset);
+      case OpCode.OP_GET_LOCAL:
+        return byteInstruction("OP_GET_LOCAL", chunk, offset);
+      case OpCode.OP_SET_LOCAL:
+        return byteInstruction("OP_SET_LOCAL", chunk, offset);
 
       default:
         System.out.println("Unknown opcode " + instruction);
