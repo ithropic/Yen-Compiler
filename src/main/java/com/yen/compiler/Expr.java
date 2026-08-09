@@ -105,8 +105,9 @@ return visitor.visitLogicalExpr(this);
     final Expr right;
 }
     static class Literal extends Expr {
-    Literal(Object value) {
+    Literal(Object value, int line) {
       this.value = value;
+      this.line = line;
 }
 
      @Override
@@ -115,6 +116,7 @@ return visitor.visitLiteralExpr(this);
     }
 
     final Object value;
+    final int line;
 }
     static class Variable extends Expr {
     Variable(Token name) {

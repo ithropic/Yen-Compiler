@@ -26,8 +26,9 @@ return visitor.visitBlockStmt(this);
     final List<Stmt> statements;
 }
     static class Expression extends Stmt {
-    Expression(Expr expression) {
+    Expression(Expr expression, int line) {
       this.expression = expression;
+      this.line = line;
 }
 
      @Override
@@ -36,6 +37,7 @@ return visitor.visitExpressionStmt(this);
     }
 
     final Expr expression;
+    final int line;
 }
     static class Function extends Stmt {
     Function(Type type, Token name, List<Parameter> params, List<Stmt> body) {
@@ -75,8 +77,9 @@ return visitor.visitIfStmt(this);
     final Token keyword;
 }
     static class Print extends Stmt {
-    Print(Expr expression) {
+    Print(Expr expression, int line) {
       this.expression = expression;
+      this.line = line;
 }
 
      @Override
@@ -85,6 +88,7 @@ return visitor.visitPrintStmt(this);
     }
 
     final Expr expression;
+    final int line;
 }
     static class Return extends Stmt {
     Return(Token keyword, Expr value) {

@@ -94,11 +94,11 @@ class Parser {
     // "desugaring" transforming the for loop into a while loop because we practically
     // dont need for loops they are just somtimes nicer to write (syntaxic sugar)."
     if (increment != null) {
-      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment, keyword.line)));
       // if there is an increment expression add it to the end of the body.
     }
 
-    if (condition == null) condition = new Expr.Literal(true);
+    if (condition == null) condition = new Expr.Literal(true, keyword.line);
     body = new Stmt.While(condition, body, keyword);
 
     if (initializer != null) {
@@ -127,7 +127,7 @@ class Parser {
     Expr value = expression(); // value will contain the AST
     // of the expression being printed.
     consume(SEMICOLON, "Expect ';' after expression");
-    return new Stmt.Print(value);
+    return new Stmt.Print(value, previous().line);
   }
 
   private Stmt returnStatement() {
@@ -190,7 +190,7 @@ class Parser {
   private Stmt expressionStatement() {
   Expr expr = expression();
   consume(SEMICOLON, "Expect ';' after expression");
-  return new Stmt.Expression(expr);
+  return new Stmt.Expression(expr, previous().line);
   }
 
   private List<Stmt> block() {
@@ -338,9 +338,9 @@ class Parser {
   }
 
   private Expr primary() { // if match found then create new Expr node of type Literal.
-    if (match(INT_LITERAL, DOUBLE_LITERAL, STRING_LITERAL)) return new Expr.Literal(previous().literal); 
-    if (match(TRUE))  return new Expr.Literal(true);
-    if (match(FALSE))  return new Expr.Literal(false);
+    if (match(INT_LITERAL, DOUBLE_LITERAL, STRING_LITERAL)) return new Expr.Literal(previous().literal, previous().line); 
+    if (match(TRUE))  return new Expr.Literal(true, previous().line);
+    if (match(FALSE))  return new Expr.Literal(false, previous().line);
     if (match(IDENTIFIER)) return new Expr.Variable(previous());
 
     if (match(LEFT_PAREN)) {

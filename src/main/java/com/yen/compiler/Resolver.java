@@ -23,12 +23,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   // we reserve the current free slot in the locals array. when we exit 
   // the block the array shrinks and the slot is free to be used again.
   
+
+  // global single map.
   private final Map<String, Symbol> globals = new HashMap<>();
   private int nextGlobalSlot = 0;
 
-// we have a global single map, and a dynamic stack of maps used to assign
-  // each variable in a current scope to a slot number relative to the current
-  // scope.
+  // dynamic stack of maps used to assign each variable in a current scope
+  // to a slot number relative to the current scope.
 
   private int nextLocalSlot = 0;
   private final ArrayDeque<Integer> slotCheckPoints = new ArrayDeque<>();

@@ -46,8 +46,14 @@ public class Compiler {
     typeChecker.check(statements);
     if (hadError) return;
 
+    BytecodeCompiler bytecode = new BytecodeCompiler();
+    Chunk chunk = bytecode.compile(statements);
 
-    new TypeDumper().dump(statements);
+    Debug disassembler = new Debug();
+    disassembler.disassembleChunk(chunk, "test_program");
+
+    VM vm = new VM();
+    vm.interpret(chunk);
   }
 
   static void error(int line, String message) {
