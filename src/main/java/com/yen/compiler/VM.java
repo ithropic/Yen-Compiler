@@ -82,6 +82,57 @@ class VM {
        case OpCode.OP_DIVIDE_DOUBLE:
          binaryOp_DOUBLE('/');
          break;
+       case OpCode.OP_EQUAL_EQUAL:{
+        Object b = pop();
+        Object a = pop();
+        if (a instanceof Number && b instanceof Number) {
+          push(((Number)a).doubleValue() == (((Number)b).doubleValue());
+        } else {
+          push(Object.equals(a, b));
+        }
+        break;
+       }
+       case OpCode.OP_BANG_EQUAL:{
+        Object b = pop();
+        Object a = pop();
+        if (a instanceof Number && b instanceof Number) {
+          push(((Number)a).doubleValue() != (((Number)b).doubleValue());
+        } else {
+          push(!Object.equals(a, b));
+        }
+        break;
+       }
+
+       case OpCode.OP_BANG_EUQAL:{
+        double b = ((Number)pop()).doubleValue();
+        double a = ((Number)pop()).doubleValue();
+        push(a != b);
+        break;
+       }
+       case OpCode.OP_LESS: {
+        double b = ((Number)pop()).doubleValue();
+        double a = ((Number)pop()).doubleValue();
+        push(a < b);
+        break;
+       }
+       case OpCode.OP_LESS_EQUAL: {
+        double b = ((Number)pop()).doubleValue();
+        double a = ((Number)pop()).doubleValue();
+        push(a <= b);
+        break;
+       }
+       case OpCode.OP_GREATER: {
+        double b = ((Number)pop()).doubleValue();
+        double a = ((Number)pop()).doubleValue();
+        push(a > b);
+        break;
+       }
+       case OpCode.OP_GREATER_EQUAL: {
+        double b = ((Number)pop()).doubleValue();
+        double a = ((Number)pop()).doubleValue();
+        push(a >= b);
+        break;
+       }
        case OpCode.OP_NOT:
          push(((boolean) pop()));
          break;
@@ -115,8 +166,22 @@ class VM {
          stack[slot] = peek();
          break;
        }
+       case OpCode.OP_JUMP: {
+        int offset = readOffset();
+          ip += offset;
+        break;
+       }
+       case OpCode.OP_JUMP_IF_FALSE: {
+        int offset = readOffset();
+        if (!((boolean) peek())) ip += offset;
+        break;
+       }
+       case OpCode.OP_LOOP: {
+        int distance = readOffset();
+        ip -= distance;
+        break
+       }
 
-        
      }
    }
  }
@@ -142,6 +207,13 @@ class VM {
  Object peek() {
    if (stackTop == 0) return null;
    return stack[stackTop - 1];
+ }
+
+ int readOffset() {
+   int high = readByte() & 0xFF;
+   high = high << 8;
+   int low = readByte() & 0xFF;
+   return high | low;
  }
 
  void binaryOp_INT(char op) {

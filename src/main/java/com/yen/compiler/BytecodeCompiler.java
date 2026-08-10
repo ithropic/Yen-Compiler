@@ -85,6 +85,25 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       }
     } else if (type == Type.STRING && opType == TokenType.PLUS) {
         return OpCode.OP_CONCAT;
+      } else if (type == Type.BOOL) {
+        switch(opType) {
+          case AND:
+            return OpCode.OP_AND;
+          case OR:
+            return OpCode.OP_OR;
+          case EQUAL_EQUAL:
+            return OpCode.OP_EQUAL_EQUAL;
+          case BANG_EQUAL:
+            return OpCode.BANG_EQUAL;
+          case LESS:
+            return OpCode.OP_LESS;
+            case LESS_EQUAL:
+            return OpCode.OP_LESS_EQUAL;
+            case GREATER:
+            return OpCode.OP_GREATER;
+            case GREATER_EQUAL:
+            return OpCode.OP_GREATER_EQUAL;
+        }
       } else {
           throw new IllegalArgumentException("Unsupported operand type for binary operator: " + type);
         }
@@ -197,7 +216,45 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitLogicalExpr(Expr.Logical expr) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    if (expr.operator.type == TokenType.AND) {
+      compile(expr.left);
+      emitByte(OpCode.OP_JUMP_IF_FALSE, expr.operator.line); // short-circuit.
+      emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
+      int offset = chunk.count - 2;
+      
+      emitByte(OpCode.OP_POP, expr.operator.line);
+
+      compile(expr.right);
+      int jumpDistance = chunk.count - offset - 2;
+      chunk.patchByte(offset, (byte) ((jumpDistance >> 8) & 0xFF));
+      chunk.patchByte(offset + 1, (byte) (jumpDistance & 0xFF));
+    } else if (expr.operator.type == TokenType.OR) {
+      compile(expr.left);
+
+      emitByte(OpCode.OP_JUMP_IF_FALSE, expr.operator.line);
+      emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
+      int falseOffset = chunk.count - 2;
+
+      emitByte(OpCode.OP_JUMP, expr.operator.line);
+      emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
+      int offset = chunk.count - 2;
+
+      emitByte(OpCode.OP_POP, expr.operator.line);
+
+      int falseJumpDistance = chunk.count - falseOffset - 2;
+      chunk.patchByte(falseOffset, (byte) ((falseJumpDistance >> 8) & 0xFF));
+      chunk.patchByte(falseOffset + 1, (byte) (falseJumpDistance & 0xFF));
+
+
+      compile(expr.right);
+      int jumpDistance = chunk.count - offset - 2;
+      chunk.patchByte(offset, (byte) ((jumpDistance >> 8) & 0xFF));
+      chunk.patchByte(offset + 1, (byte) (jumpDistance & 0xFF));
+    } else {
+       throw new IllegalArgumentException("Unknown logical operator: " + expr.operator.type);
+    }
+    
+    return null;
   }
 
   @Override
@@ -220,14 +277,68 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   
   @Override
   public Void visitIfStmt(Stmt.If stmt) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    compile(stmt.condition);
+    emitByte(OpCode.OP_JUMP_IF_FALSE, stmt.keyword.line);
+    emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line); // place holder bytes (big endian).
+    int jumpOffset = chunk.count - 2; // points to the high byte of the offset.
 
+    emitByte(OpCode.OP_POP, stmt.keyword.line);
+    compile(stmt.thenBranch);
+
+    int elseJumpOffset = 0;
+    if (stmt.elseBranch != null) {
+    emitByte(OpCode.OP_JUMP, stmt.keyword.line);
+    emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line);
+    elseJumpOffset = chunk.count - 2;
+    }
+
+
+    int jumpDistance = chunk.count - jumpOffset - 2;
+    chunk.patchByte(jumpOffset, (byte) ((jumpDistance >> 8) & 0xFF)); // update the JUMP_IF_FALSE offset 
+                                                              // to jump after the if block and the unconditional JUMP
+                                                              // directly inside the else block after we know its size.
+    chunk.patchByte(jumpOffset + 1, (byte) ((jumpDistance) & 0xFF));
+
+    emitByte(OpCode.OP_POP, stmt.keyword.line);
+
+    if (stmt.elseBranch != null) {
+    compile(stmt.elseBranch);
+    jumpDistance = chunk.count - elseJumpOffset - 2; // update the unconditional JUMP offset
+                                                     // to jump past the else block if the condition is true.
+                                                     // this jump will be executed directly after the if block
+                                                     // if the condition is true and we jump past it
+                                                     // to execute the else block if the condition is false.
+    chunk.patchByte(elseJumpOffset, (byte) ((jumpDistance >> 8) & 0xFF));
+    chunk.patchByte(elseJumpOffset + 1, (byte) ((jumpDistance) & 0xFF)); 
+    }
+
+    return null;
   }
 
   @Override
   public Void visitWhileStmt(Stmt.While stmt) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    int loopStart = chunk.count;
+    compile(stmt.condition);
+    emitByte(OpCode.OP_JUMP_IF_FALSE, stmt.keyword.line);
+    emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line);
+    int offset = chunk.count - 2;
 
+    emitByte(OpCode.OP_POP, stmt.keyword.line);
+
+    compile(stmt.body);
+
+
+    emitByte(OpCode.OP_LOOP, stmt.keyword.line);
+    int loopDistance = chunk.count - loopStart + 2; // +2 because you need to take into consideration the two bytes emitted after.
+    emitBytes((byte) (((loopDistance) >> 8) & 0xFF), (byte) ((loopDistance) & 0xFF), stmt.keyword.line);
+
+    int jumpDistance = chunk.count - offset - 2;
+    chunk.patchByte(offset, (byte) ((jumpDistance >> 8) & 0xFF));
+    chunk.patchByte(offset + 1, (byte) (jumpDistance & 0xFF));
+
+    emitByte(OpCode.OP_POP, stmt.keyword.line);
+
+    return null;
   }
 
   @Override

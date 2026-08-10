@@ -33,5 +33,9 @@ class Chunk {
     writeByte(OpCode.OP_CONSTANT, line);
     writeByte((byte) index, line);
   }
+
+  void patchByte(int offset, byte value) {
+    code[offset] = value;
+  }
   
 }

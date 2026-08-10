@@ -68,6 +68,12 @@ class Debug {
         return byteInstruction("OP_GET_LOCAL", chunk, offset);
       case OpCode.OP_SET_LOCAL:
         return byteInstruction("OP_SET_LOCAL", chunk, offset);
+      case OpCode.OP_JUMP:
+        return jumpInstruction("OP_JUMP", chunk, offset);
+      case OpCode.OP_JUMP_IF_FALSE:
+        return jumpInstruction("OP_JUMP_IF_FALSE", chunk, offset);
+      case OpCode.OP_LOOP:
+        return loopInstruction("OP_LOOP", chunk, offset);
 
       default:
         System.out.println("Unknown opcode " + instruction);
@@ -94,4 +100,23 @@ class Debug {
     System.out.println(opcode + " " + slot);
     return offset + 2;
   }
+
+  private static int jumpInstruction(String opcode, Chunk chunk, int offset) {
+    int high = ((chunk.code[offset + 1] & 0xFF) << 8);
+    int low = chunk.code[offset + 2] & 0xFF;
+    int distance = high | low;
+    int  target = offset + 3 + distance;
+    System.out.printf("%-16s %4d -> %d%n", opcode, offset, target);
+    return offset + 3;
+  }
+
+  private int loopInstruction(String name, Chunk chunk, int offset) {
+    int high = chunk.code[offset + 1] & 0xFF;
+    int low = chunk.code[offset + 2] & 0xFF;
+    int distance = (high << 8) | low;
+    int target = offset + 3 - distance;
+    System.out.printf("%-16s %4d -> %d%n", name, offset, target);
+    return offset + 3;
+  }
+
 }
