@@ -3,11 +3,14 @@ package com.yen.compiler;
 class OpCode {
 
   // core.
-  static final byte OP_CONSTANT = 0x00; static final byte OP_RETURN = 0x01;
+  static final byte OP_CONSTANT = 0x00;
+  static final byte OP_RETURN_VOID = 0x01;
   static final byte OP_INT_TO_DOUBLE = 0x02;
   static final byte OP_PRINT = 0x03;
   static final byte OP_POP = 0x04;
   static final byte OP_CONCAT = 0x05;
+  static final byte OP_CALL = 0x06;
+  static final byte OP_RETURN_VALUE = 0x07;
 
 
   // arithmetic INT.

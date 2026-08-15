@@ -22,8 +22,10 @@ class Debug {
     switch (instruction) {
       case OpCode.OP_CONSTANT:
         return constantInstruction("OP_CONSTANT", chunk, offset);
-      case OpCode.OP_RETURN:
-        return simpleInstruction("OP_RETURN", chunk, offset);
+      case OpCode.OP_RETURN_VOID:
+        return simpleInstruction("OP_RETURN_VOID", chunk, offset);
+      case OpCode.OP_RETURN_VALUE:
+        return simpleInstruction("OP_RETURN_VALUE", chunk, offset);
             case OpCode.OP_POP:
         return simpleInstruction("OP_POP", chunk, offset);
       case OpCode.OP_NOT:
@@ -55,6 +57,20 @@ class Debug {
         return simpleInstruction("OP_DIVIDE_DOUBLE", chunk, offset);
       case OpCode.OP_NEGATE_DOUBLE:
         return simpleInstruction("OP_NEGATE_DOUBLE", chunk, offset);
+
+      case OpCode.OP_EQUAL_EQUAL:
+        return simpleInstruction("EQUAL_EQUAL", chunk, offset);
+      case OpCode.OP_BANG_EQUAL:
+        return simpleInstruction("BANG_EQUAL", chunk, offset);
+      case OpCode.OP_LESS:
+        return simpleInstruction("OP_LESS", chunk, offset);
+      case OpCode.OP_LESS_EQUAL:
+          return simpleInstruction("OP_LESS_EQUAL",chunk, offset);
+      case OpCode.OP_GREATER:
+        return simpleInstruction("OP_GREATER", chunk, offset);
+      case OpCode.OP_GREATER_EQUAL:
+        return simpleInstruction("OP_GREATER_EQUAL", chunk, offset);
+
 
       case OpCode.OP_DEFINE_GLOBAL:
         return byteInstruction("OP_DEFINE_GLOBAL", chunk, offset);
@@ -110,7 +126,7 @@ class Debug {
     return offset + 3;
   }
 
-  private int loopInstruction(String name, Chunk chunk, int offset) {
+  private static int loopInstruction(String name, Chunk chunk, int offset) {
     int high = chunk.code[offset + 1] & 0xFF;
     int low = chunk.code[offset + 2] & 0xFF;
     int distance = (high << 8) | low;

@@ -1,4 +1,7 @@
 package com.yen.compiler;
+
+import java.util.ArrayDeque;
+
 class VM {
   public enum InterpretResult {
     INTERPRET_OK,
@@ -6,11 +9,12 @@ class VM {
     INTERPRET_RUNTIME_ERROR
   }
 
+  private final ArrayDeque<CallFrame> callFrameStack = new ArrayDeque<>();
+  private CallFrame frame;
+
   private static final int STACK_MAX = 256;
   private static final int GLOBALS_MAX = 256;
 
-  private Chunk chunk;
-  private int ip;
   private Object[] stack;
   int stackTop;
   private Object[] globals;
@@ -21,38 +25,58 @@ class VM {
   }
   // SET/GET insruction's operand must be masked with 0xFF when read to prevent sign extention for value greater than 127.
   public InterpretResult interpret(Chunk chunk) {
-    this.chunk = chunk;
-    this.ip = 0;
-    this.stackTop = 0;
+    callFrameStack.push(new CallFrame(chunk, 0, 0));
     return run();
  }
 
  // since we have type-spcecific instructions  we have a better run-time performance.
  private InterpretResult run() {
-   for (;;) {
+   while (!callFrameStack.isEmpty()) {
+     frame = callFrameStack.peek();
      byte instruction;
      switch(instruction = readByte()) {
        case OpCode.OP_CONSTANT:
          Object value = readConstant();
          push(value);
          break;
+       case OpCode.OP_RETURN_VOID: {
+         stackTop = frame.frameBase - 1;
+         callFrameStack.pop();
+         if (callFrameStack.isEmpty()) {
+          return InterpretResult.INTERPRET_OK;
+         } 
+         break; }
+       case OpCode.OP_RETURN_VALUE: {
+         Object returnValue = pop();
+         stackTop = frame.frameBase - 1;
+         push(returnValue);
+         callFrameStack.pop();
+         if (callFrameStack.isEmpty()) {
+          return InterpretResult.INTERPRET_OK;
+         } 
+         break; }
        case OpCode.OP_INT_TO_DOUBLE:
          push((double) (int) pop());
-         break;
-       case OpCode.OP_RETURN:
-         return InterpretResult.INTERPRET_OK;
-       case OpCode.OP_POP:
-         pop();
-         break;
-       case OpCode.OP_CONCAT:
-         String b = (String) pop();
-         String a = (String) pop();
-         push(a + b);
          break;
        case OpCode.OP_PRINT:
          System.out.println(pop());
          break;
-       case OpCode.OP_NEGATE_INT:
+       case OpCode.OP_POP:
+         pop();
+         break;
+     case OpCode.OP_CONCAT: {
+         String b = (String) pop();
+         String a = (String) pop();
+         push(a + b);
+         break;
+       }
+     case OpCode.OP_CALL:
+       int argc = readByte() & 0xFF;
+       int frameBase = stackTop - argc;
+       YenFunction function = (YenFunction) stack[frameBase - 1];
+       callFrameStack.push(new CallFrame(function.chunk, 0, frameBase));
+       break;
+      case OpCode.OP_NEGATE_INT:
          push(- (int)pop());
          break;
        case OpCode.OP_ADD_INT:
@@ -86,9 +110,9 @@ class VM {
         Object b = pop();
         Object a = pop();
         if (a instanceof Number && b instanceof Number) {
-          push(((Number)a).doubleValue() == (((Number)b).doubleValue());
+          push(((Number)a).doubleValue() == (((Number)b).doubleValue()));
         } else {
-          push(Object.equals(a, b));
+          push((a.equals(b)));
         }
         break;
        }
@@ -96,17 +120,10 @@ class VM {
         Object b = pop();
         Object a = pop();
         if (a instanceof Number && b instanceof Number) {
-          push(((Number)a).doubleValue() != (((Number)b).doubleValue());
+          push(((Number)a).doubleValue() != (((Number)b).doubleValue()));
         } else {
-          push(!Object.equals(a, b));
+          push(!(a.equals(b)));
         }
-        break;
-       }
-
-       case OpCode.OP_BANG_EUQAL:{
-        double b = ((Number)pop()).doubleValue();
-        double a = ((Number)pop()).doubleValue();
-        push(a != b);
         break;
        }
        case OpCode.OP_LESS: {
@@ -134,7 +151,7 @@ class VM {
         break;
        }
        case OpCode.OP_NOT:
-         push(((boolean) pop()));
+         push(!((boolean) pop()));
          break;
        case OpCode.OP_DEFINE_GLOBAL: {
          int slot = readByte() & 0xFF;
@@ -158,41 +175,42 @@ class VM {
        }
        case OpCode.OP_GET_LOCAL: {
          int slot = readByte() & 0xFF;
-         push(stack[slot]);
+         push(stack[frame.frameBase + slot]);
          break;
        }
        case OpCode.OP_SET_LOCAL: {
          int slot = readByte() & 0xFF;
-         stack[slot] = peek();
+         stack[frame.frameBase + slot] = peek();
          break;
        }
        case OpCode.OP_JUMP: {
         int offset = readOffset();
-          ip += offset;
+          frame.ip += offset;
         break;
        }
        case OpCode.OP_JUMP_IF_FALSE: {
         int offset = readOffset();
-        if (!((boolean) peek())) ip += offset;
+        if (!((boolean) peek())) frame.ip += offset;
         break;
        }
        case OpCode.OP_LOOP: {
         int distance = readOffset();
-        ip -= distance;
-        break
+        frame.ip -= distance;
+        break;
        }
 
      }
    }
+   return InterpretResult.INTERPRET_OK;
  }
 
  private byte readByte() {
-   return chunk.code[ip++];
+   return frame.chunk.code[frame.ip++];
  }
 
  private Object readConstant() {
    int index = readByte() & 0xFF;
-   return chunk.constants.get(index);
+   return frame.chunk.constants.get(index);
  }
 
  void push(Object value) {

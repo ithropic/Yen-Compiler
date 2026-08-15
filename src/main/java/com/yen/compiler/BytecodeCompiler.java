@@ -13,7 +13,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     for (Stmt stmt : statements) {
       compile(stmt);
     }
-    emitByte(OpCode.OP_RETURN, 0); // temporarily, real end of program will be handled later.
+    emitByte(OpCode.OP_RETURN_VOID, 0); // temporarily, real end of program will be handled later.
     return chunk;
   }
 
@@ -87,14 +87,10 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return OpCode.OP_CONCAT;
       } else if (type == Type.BOOL) {
         switch(opType) {
-          case AND:
-            return OpCode.OP_AND;
-          case OR:
-            return OpCode.OP_OR;
-          case EQUAL_EQUAL:
+         case EQUAL_EQUAL:
             return OpCode.OP_EQUAL_EQUAL;
           case BANG_EQUAL:
-            return OpCode.BANG_EQUAL;
+            return OpCode.OP_BANG_EQUAL;
           case LESS:
             return OpCode.OP_LESS;
             case LESS_EQUAL:
@@ -103,6 +99,8 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             return OpCode.OP_GREATER;
             case GREATER_EQUAL:
             return OpCode.OP_GREATER_EQUAL;
+            default:
+            throw new IllegalArgumentException("Unknown binary operator: " + opType);
         }
       } else {
           throw new IllegalArgumentException("Unsupported operand type for binary operator: " + type);
@@ -256,11 +254,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     
     return null;
   }
-
-  @Override
-  public Void visitCallExpr(Expr.Call expr) {
-    throw new UnsupportedOperationException("Not yet implemented.");
-  }
+  
 
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
@@ -343,14 +337,49 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitReturnStmt(Stmt.Return stmt) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    if (stmt.value != null) {
+      compile(stmt.value);
+      emitByte(OpCode.OP_RETURN_VALUE, stmt.keyword.line);
+      return null;
+    }
+    emitByte(OpCode.OP_RETURN_VOID, stmt.keyword.line);
+
+    return null;
   }
 
   @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    Chunk savedChunk = chunk;
+    chunk = new Chunk();
+    
+    for (Stmt statement : stmt.body) {
+      compile(statement);
+    }
+    emitByte(OpCode.OP_RETURN_VOID, stmt.name.line);
+
+    YenFunction function = new YenFunction(chunk);
+    chunk = savedChunk;
+
+    writeConstant(function, stmt.name.line);
+    emitByte(OpCode.OP_DEFINE_GLOBAL, stmt.name.line);
+    emitByte((byte) stmt.symbol.slotIndex, stmt.name.line);
+
+    return null;
   }
   
+  @Override
+  public Void visitCallExpr(Expr.Call expr) {
+    compile(expr.callee);
 
+    for (Expr arg : expr.arguments) {
+      compile(arg);
+    }
+    int argc = expr.arguments.size();
+
+    emitByte(OpCode.OP_CALL, expr.paren.line);
+    emitByte((byte) argc, expr.paren.line);
+
+    return null;
+  }
 
 }
