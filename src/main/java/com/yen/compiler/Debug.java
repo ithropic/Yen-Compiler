@@ -34,6 +34,8 @@ class Debug {
         return simpleInstruction("OP_INT_TO_DOUBLE", chunk, offset);
       case OpCode.OP_CONCAT:
         return simpleInstruction("OP_CONCAT", chunk, offset);
+      case OpCode.OP_CALL:
+        return byteInstruction("OP_CALL", chunk, offset);
       case OpCode.OP_PRINT:
         return simpleInstruction("OP_PRINT", chunk, offset);
       case OpCode.OP_ADD_INT:
@@ -103,6 +105,9 @@ class Debug {
                                                // preserve the first 8 bits and zero-out the rest 24 bits.
     Object value = chunk.constants.get(index);
     System.out.println(opcode + " " + value);
+     if (value instanceof YenFunction) {
+      disassembleChunk( ((YenFunction) value).chunk, "Function chunk (CONST " + index + ")");
+    }
     return offset + 2;
   }
 

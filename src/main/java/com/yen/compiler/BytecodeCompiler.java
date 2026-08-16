@@ -201,7 +201,9 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   @Override
   public Void visitExpressionStmt(Stmt.Expression stmt) {
     compile(stmt.expression);
+    if (!(stmt.expression instanceof Expr.Call call && call.type == Type.VOID)) {
     emitByte(OpCode.OP_POP, stmt.line);
+    }
     return null;
   }
 
@@ -351,11 +353,15 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitFunctionStmt(Stmt.Function stmt) {
     Chunk savedChunk = chunk;
     chunk = new Chunk();
+
+    localCountStack.push(0);
     
     for (Stmt statement : stmt.body) {
       compile(statement);
     }
     emitByte(OpCode.OP_RETURN_VOID, stmt.name.line);
+
+    localCountStack.pop();
 
     YenFunction function = new YenFunction(chunk);
     chunk = savedChunk;
