@@ -360,7 +360,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     YenFunction function = new YenFunction(chunk);
     chunk = savedChunk;
 
-    writeConstant(function, stmt.name.line);
+    chunk.writeConstant(function, stmt.name.line);
     emitByte(OpCode.OP_DEFINE_GLOBAL, stmt.name.line);
     emitByte((byte) stmt.symbol.slotIndex, stmt.name.line);
 
