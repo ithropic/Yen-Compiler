@@ -49,9 +49,6 @@ public class Compiler {
     BytecodeCompiler bytecode = new BytecodeCompiler();
     Chunk chunk = bytecode.compile(statements);
 
-    Debug disassembler = new Debug();
-    disassembler.disassembleChunk(chunk, "test_program");
-
     VM vm = new VM();
     vm.interpret(chunk);
   }
