@@ -1,0 +1,35 @@
+{
+  "name": "yen-lang-support",
+  "displayName": "Yen Language Support",
+  "description": "Syntax highlighting for the Yen programming language (.yen)",
+  "version": "0.1.0",
+  "publisher": "ithropic",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "yen",
+        "aliases": [
+          "Yen",
+          "yen"
+        ],
+        "extensions": [
+          ".yen"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "yen",
+        "scopeName": "source.yen",
+        "path": "./syntaxes/yen.tmLanguage.json"
+      }
+    ]
+  }
+}

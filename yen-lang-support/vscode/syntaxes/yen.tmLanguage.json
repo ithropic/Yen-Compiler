@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Yen",
+  "scopeName": "source.yen",
+  "fileTypes": [
+    "yen"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.yen",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.yen",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.yen",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.double.yen",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.int.yen",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.yen",
+          "match": "\\b(if|else|for|while|return)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.yen",
+          "match": "\\b(and|or)\\b"
+        },
+        {
+          "name": "keyword.other.yen",
+          "match": "\\bprint\\b"
+        }
+      ]
+    },
+    "types": {
+      "name": "storage.type.yen",
+      "match": "\\b(void|int|double|bool|string)\\b"
+    },
+    "constants": {
+      "name": "constant.language.yen",
+      "match": "\\b(true|false)\\b"
+    },
+    "functions": {
+      "patterns": [
+        {
+          "comment": "Function declaration: type followed by identifier and '('",
+          "match": "\\b(void|int|double|bool|string)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "storage.type.yen"
+            },
+            "2": {
+              "name": "entity.name.function.yen"
+            }
+          }
+        },
+        {
+          "comment": "Function call: identifier followed by '('",
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.yen"
+            }
+          }
+        }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.yen",
+      "match": "(==|!=|<=|>=|=|<|>|!|\\+|-|\\*|/)"
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.comma.yen",
+          "match": ","
+        },
+        {
+          "name": "punctuation.terminator.statement.yen",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.accessor.yen",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.section.braces.yen",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.section.parens.yen",
+          "match": "[()]"
+        }
+      ]
+    }
+  }
+}
