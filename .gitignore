@@ -1,4 +1,5 @@
 target/
+tools/
 *.class
 .idea/
 *.iml
@@ -13,5 +14,9 @@ Session.vim
 
 # test  files
 test_sources/
+
+# executables
+yen-0.1.0 
+yen
 
 
