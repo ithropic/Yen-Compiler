@@ -4,6 +4,10 @@
   "description": "Syntax highlighting for the Yen programming language (.yen)",
   "version": "0.1.0",
   "publisher": "ithropic",
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/ithropic/compiler.git"
+},
   "engines": {
     "vscode": "^1.60.0"
   },

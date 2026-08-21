@@ -1,0 +1,5 @@
+.vscode/**
+.git/**
+.gitignore
+*.vsix
+README.md
