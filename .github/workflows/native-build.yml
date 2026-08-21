@@ -1,0 +1,62 @@
+name: Build Native Executables
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows x86-64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21.0.12'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Build native executable
+        run: mvn clean package -Pnative
+
+      - name: Rename executable
+        shell: pwsh
+        run: Rename-Item target/yen.exe yen-windows-x86_64.exe
+
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: yen-windows-x86_64
+          path: target/yen-windows-x86_64.exe
+
+  macos:
+    name: macOS Apple Silicon
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21.0.12'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Build native executable
+        run: mvn clean package -Pnative
+
+      - name: Rename executable
+        run: mv target/yen target/yen-macos-aarch64
+
+      - name: Upload macOS executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: yen-macos-aarch64
+          path: target/yen-macos-aarch64
