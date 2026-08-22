@@ -24,7 +24,16 @@ Yen uses **only `//` line comments**. There is deliberately no `/* ... */` comme
 
 ## VS Code
 
-The `vscode/` directory is a complete local VS Code extension:
+The `vscode/` directory contains the VS Code extension.
+
+For normal installation, use the provided `.vsix` package:
+
+1. Open VS Code.
+2. Open the Extensions view.
+3. Select `...` → **Install from VSIX...**
+4. Select `yen-lang-support-0.1.0.vsix`.
+
+Alternatively, for local development, copy the extension directly:
 
 ```bash
 cp -r vscode ~/.vscode/extensions/yen-lang-support-0.1.0
