@@ -11,6 +11,9 @@ tools/
 *~
 .neetrwhist
 Session.vim
+.classpath
+.project
+.settings/
 
 # test  files
 test_sources/
