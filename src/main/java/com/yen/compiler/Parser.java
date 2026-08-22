@@ -6,9 +6,9 @@ import java.util.ArrayList;
 
 import static com.yen.compiler.TokenType.*;
 
-
 class Parser {
-  private static class ParseError extends RuntimeException {}
+  private static class ParseError extends RuntimeException {
+  }
 
   private final List<Token> tokens;
   private int current = 0; // index used to track the current Token in tokens.
@@ -17,13 +17,13 @@ class Parser {
     this.tokens = tokens; // constructor.
   }
 
-  List<Stmt> parse()  { 
+  List<Stmt> parse() {
     // an expression evaluates to some value, it is not an instruction
     // "1 + 1, x + 2".
-     // a statement is a full instruction that perform an action. 
-     // "if statement, while loop, variable declaration."
-     // an expression statement is an expression folowed by a semicolon, 
-     // it is an expression that produces a side effect.
+    // a statement is a full instruction that perform an action.
+    // "if statement, while loop, variable declaration."
+    // an expression statement is an expression folowed by a semicolon,
+    // it is an expression that produces a side effect.
     List<Stmt> statements = new ArrayList<>();
     while (!isAtEnd()) {
       statements.add(declaration());
@@ -33,31 +33,41 @@ class Parser {
 
   private Stmt declaration() {
     try {
-    if (match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOL, TokenType.VOID))
-        {
-          Type type = getType(previous());
-          Token name = consume(IDENTIFIER, "Expect identifier in a declaration.");
-          if (check(LEFT_PAREN)) {
-              return funDecl(type, name);
-          } else {
-            return varDeclaration(type, name);
-          }
+      if (match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOL, TokenType.VOID)) {
+        Type type = getType(previous());
+        Token name = consume(IDENTIFIER, "Expect identifier in a declaration.");
+        if (check(LEFT_PAREN)) {
+          return funDecl(type, name);
+        } else {
+          return varDeclaration(type, name);
         }
-    
-    return statement();
-    } catch (ParseError error){
-      synchronize();
-      return null;
+      }
+
+      return statement();
+    } catch (ParseError error) {
+      synchronize(); // if a parsing error is encountered we don't want to compiler to abort and
+                     // crash,
+      // so it synchronize meaning it will jump past the code containing the error and
+      // continue from the start of a new statement.
+      // (usually after a semicolon or at a declaration).
+
     }
+    return null;
   }
 
   private Stmt statement() {
-    if (match(FOR)) return forStatement();
-    if (match(IF)) return ifStatement();
-    if (match(PRINT)) return printStatement();
-    if (match(RETURN)) return returnStatement();
-    if (match(WHILE)) return whileStatement();
-    if (match(LEFT_BRACE)) return new Stmt.Block(block(), previous().line);
+    if (match(FOR))
+      return forStatement();
+    if (match(IF))
+      return ifStatement();
+    if (match(PRINT))
+      return printStatement();
+    if (match(RETURN))
+      return returnStatement();
+    if (match(WHILE))
+      return whileStatement();
+    if (match(LEFT_BRACE))
+      return new Stmt.Block(block(), previous().line);
 
     return expressionStatement();
   }
@@ -68,13 +78,11 @@ class Parser {
     Stmt initializer;
     if (match(SEMICOLON)) {
       initializer = null;
-    }
-     else if (matchType()) {
-       Type type = getType(previous());
-       Token name = consume(IDENTIFIER, "Expect identifier after type.");
+    } else if (matchType()) {
+      Type type = getType(previous());
+      Token name = consume(IDENTIFIER, "Expect identifier after type.");
       initializer = varDeclaration(type, name);
-    } 
-    else {
+    } else {
       initializer = expressionStatement();
     }
 
@@ -91,20 +99,22 @@ class Parser {
     consume(RIGHT_PAREN, "Expect ')' after for clauses.");
 
     Stmt body = statement();
-    // "desugaring" transforming the for loop into a while loop because we practically
+    // "desugaring" transforming the for loop into a while loop because we
+    // practically
     // dont need for loops they are just somtimes nicer to write (syntactic sugar)."
     if (increment != null) {
       body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment, keyword.line)), keyword.line);
       // if there is an increment expression add it to the end of the body.
     }
 
-    if (condition == null) condition = new Expr.Literal(true, keyword.line);
+    if (condition == null)
+      condition = new Expr.Literal(true, keyword.line);
     body = new Stmt.While(condition, body, keyword);
 
     if (initializer != null) {
       body = new Stmt.Block(Arrays.asList(initializer, body), keyword.line);
     }
-    
+
     return body;
   }
 
@@ -132,10 +142,10 @@ class Parser {
 
   private Stmt returnStatement() {
     Token keyword = previous();
-    
+
     Expr value = null;
     if (!check(SEMICOLON)) {
-       value = expression();
+      value = expression();
     }
 
     consume(SEMICOLON, "Expect ';' after return statement.");
@@ -143,10 +153,10 @@ class Parser {
   }
 
   private Stmt varDeclaration(Type type, Token name) {
-    
+
     Expr initializer = null;
     if (match(EQUAL)) {
-     initializer = expression();
+      initializer = expression();
     }
     consume(SEMICOLON, "Expect ';' after variable declaration.");
 
@@ -171,11 +181,10 @@ class Parser {
     }
     consume(RIGHT_PAREN, "Expect ')' after parameters.");
 
-      consume(LEFT_BRACE, "Expect '{' before function body.");
-      List<Stmt> body = block();
-      return new Stmt.Function(type, name, parameters, body);
+    consume(LEFT_BRACE, "Expect '{' before function body.");
+    List<Stmt> body = block();
+    return new Stmt.Function(type, name, parameters, body);
   }
-
 
   private Stmt whileStatement() {
     Token keyword = previous();
@@ -184,13 +193,13 @@ class Parser {
     consume(RIGHT_PAREN, "Expect ')' after condition.");
     Stmt body = statement();
 
-    return new Stmt.While(condition, body, keyword); 
+    return new Stmt.While(condition, body, keyword);
   }
 
   private Stmt expressionStatement() {
-  Expr expr = expression();
-  consume(SEMICOLON, "Expect ';' after expression");
-  return new Stmt.Expression(expr, previous().line);
+    Expr expr = expression();
+    consume(SEMICOLON, "Expect ';' after expression");
+    return new Stmt.Expression(expr, previous().line);
   }
 
   private List<Stmt> block() {
@@ -205,18 +214,18 @@ class Parser {
   }
 
   private Expr assignment() {
-    Expr  expr = or(); // get left side as an expression temporarily.
+    Expr expr = or(); // get left side as an expression temporarily.
 
     if (match(EQUAL)) {
       Token equal = previous();
       Expr value = assignment(); // it is possible to have multiple cascaded
-                             // assignments if not, it returns an expression.
+      // assignments if not, it returns an expression.
 
       if (expr instanceof Expr.Variable) { // if the left side is not a variable
                                            // of assignable, error.
-        Token name = ((Expr.Variable)expr).name; // now the left side expr is treated
-                                                 // as a variable,not an expression
-                                                 // to be evaluated but a location.
+        Token name = ((Expr.Variable) expr).name; // now the left side expr is treated
+                                                  // as a variable,not an expression
+                                                  // to be evaluated but a location.
         return new Expr.Assign(name, value);
       }
       error(equal, "Invalid assignment target.");
@@ -249,21 +258,20 @@ class Parser {
     return expr;
   }
 
-    // multiple recursive calls mirroring the laguage's grammar rules.
+  // multiple recursive calls mirroring the laguage's grammar rules.
   private Expr expression() {
     return assignment();
   }
 
-
   private Expr equality() {
-  Expr left = comparison();
+    Expr left = comparison();
 
-  while (match(BANG_EQUAL, EQUAL_EQUAL)) {
-    Token operator = previous();
-    Expr right = comparison();
-    left = new Expr.Binary(left, operator, right);
-  }
-  return left;
+    while (match(BANG_EQUAL, EQUAL_EQUAL)) {
+      Token operator = previous();
+      Expr right = comparison();
+      left = new Expr.Binary(left, operator, right);
+    }
+    return left;
   }
 
   private Expr comparison() {
@@ -303,49 +311,53 @@ class Parser {
       Token operator = previous();
       Expr right = unary();
       return new Expr.Unary(operator, right);
-    } 
+    }
     return call();
   }
 
   private Expr finishCall(Expr.Variable callee) {
     List<Expr> arguments = new ArrayList<>();
-      if (!check(RIGHT_PAREN)) {
-        do {
-          if (arguments.size() >= 255) {
-            error(peek(), "Arguments limit reached (255 max).");
-          }
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (arguments.size() >= 255) {
+          error(peek(), "Arguments limit reached (255 max).");
+        }
         arguments.add(expression());
       } while (match(COMMA));
     }
-      
+
     Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
 
-    return new Expr.Call(callee, paren, arguments); 
+    return new Expr.Call(callee, paren, arguments);
   }
-    
+
   private Expr call() {
     Expr expr = primary();
 
-      if (match(LEFT_PAREN)) {
-        if (!(expr instanceof Expr.Variable calleeVar)) {
-          error(previous(), "Function can only be called by name.");
-          return expr;
-        }
-        expr = finishCall(calleeVar);
+    if (match(LEFT_PAREN)) {
+      if (!(expr instanceof Expr.Variable calleeVar)) {
+        error(previous(), "Function can only be called by name.");
+        return expr;
       }
+      expr = finishCall(calleeVar);
+    }
 
     return expr;
   }
 
   private Expr primary() { // if match found then create new Expr node of type Literal.
-    if (match(INT_LITERAL, DOUBLE_LITERAL, STRING_LITERAL)) return new Expr.Literal(previous().literal, previous().line); 
-    if (match(TRUE))  return new Expr.Literal(true, previous().line);
-    if (match(FALSE))  return new Expr.Literal(false, previous().line);
-    if (match(IDENTIFIER)) return new Expr.Variable(previous());
+    if (match(INT_LITERAL, DOUBLE_LITERAL, STRING_LITERAL))
+      return new Expr.Literal(previous().literal, previous().line);
+    if (match(TRUE))
+      return new Expr.Literal(true, previous().line);
+    if (match(FALSE))
+      return new Expr.Literal(false, previous().line);
+    if (match(IDENTIFIER))
+      return new Expr.Variable(previous());
 
     if (match(LEFT_PAREN)) {
       Expr exp = expression();
-      consume(RIGHT_PAREN, "Expect ')' after expression."); // after we finish  parsing the inner expression 
+      consume(RIGHT_PAREN, "Expect ')' after expression."); // after we finish parsing the inner expression
                                                             // we must find a closing ')', else "syntax Error"
       return new Expr.Grouping(exp);
     }
@@ -356,17 +368,17 @@ class Parser {
   // helpers.
   private boolean match(TokenType... types) {
     for (TokenType type : types) {
-      if (check(type)) 
-      {
+      if (check(type)) {
         advance();
-        return true; 
+        return true;
       }
     }
     return false;
   }
 
-  private boolean check(TokenType type)  {
-    if (isAtEnd()) return false;
+  private boolean check(TokenType type) {
+    if (isAtEnd())
+      return false;
     return peek().type == type;
   }
 
@@ -383,12 +395,14 @@ class Parser {
   }
 
   private Token advance() {
-    if (!isAtEnd()) current++;
+    if (!isAtEnd())
+      current++;
     return previous();
   }
 
   private Token consume(TokenType type, String message) {
-    if (check(type)) return advance();
+    if (check(type))
+      return advance();
 
     throw error(peek(), message);
   }
@@ -412,52 +426,61 @@ class Parser {
   }
 
   private Type getType(Token token) {
-    switch(token.type) {
-      case INT    : return Type.INT;
-      case DOUBLE : return Type.DOUBLE;
-      case STRING : return Type.STRING;
-      case BOOL   : return Type.BOOL;
-      case VOID   : return Type.VOID;
-      default : return Type.ERROR;
-    } 
+    switch (token.type) {
+      case INT:
+        return Type.INT;
+      case DOUBLE:
+        return Type.DOUBLE;
+      case STRING:
+        return Type.STRING;
+      case BOOL:
+        return Type.BOOL;
+      case VOID:
+        return Type.VOID;
+      default:
+        return Type.ERROR;
     }
+  }
 
   private ParseError error(Token token, String message) {
     Compiler.error(token, message);
     return new ParseError();
   }
 
-  // when an error occurs we throw an error and catch it at the first calling method "parse()" 
-  // to pop the current recursive calls stack frame and report the error but the parser keeps going
+  // when an error occurs we throw an error and catch it at the first calling
+  // method "parse()"
+  // to pop the current recursive calls stack frame and report the error but the
+  // parser keeps going
   // inorder to find other eventual errors.
   // for this we need to synchronize the parser, i.e. we need to skip the tokens
   // that were going to be processed in that removed stack frame.
   // to do that we keep skipping tokens until we reach something that indicates
-  // the end of the current statement containing the error and the start of a new 
-  // statement something like: a SEMICOLON, type initializers or return types like INT, 
+  // the end of the current statement containing the error and the start of a new
+  // statement something like: a SEMICOLON, type initializers or return types like
+  // INT,
   // VOID, or a for, while loops...
- 
+
   private void synchronize() {
-  advance();
-  while (!isAtEnd()) {
-    if (previous().type == SEMICOLON) return;
-
-    switch(peek().type) {
-      case FOR:
-      case IF:
-      case WHILE:
-      case PRINT:
-      case RETURN:
-      case INT:
-      case DOUBLE:
-      case BOOL:
-      case VOID:
-      case STRING:
-        return;
-    }
     advance();
-  }
+    while (!isAtEnd()) {
+      if (previous().type == SEMICOLON)
+        return;
+
+      switch (peek().type) {
+        case FOR:
+        case IF:
+        case WHILE:
+        case PRINT:
+        case RETURN:
+        case INT:
+        case DOUBLE:
+        case BOOL:
+        case VOID:
+        case STRING:
+          return;
+      }
+      advance();
+    }
   }
 
-  
 }

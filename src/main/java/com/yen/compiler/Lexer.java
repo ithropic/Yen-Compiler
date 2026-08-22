@@ -150,11 +150,9 @@ class Lexer {
     // (numbers, strings..) so the literal/value gets stored correcly instead of
     // null.
     String text = source.substring(start, current); // passing curent instead of current -1
-    // comes down to how java's String.substring(); works, it returns the substring
-    // from
-    // the start index until the index right before endIndex so the last char
-    // (pointed by tha enbIndex arg)
-    // is not included.
+    // comes down to how java's String.substring() works, it returns the substring
+    // from the start index until the index right before endIndex so the last char
+    // (pointed by the enbIndex arg) is not included.
     tokens.add(new Token(type, text, literal, line));
   }
 
@@ -165,9 +163,8 @@ class Lexer {
     if (source.charAt(current) != c)
       return false;
 
-    current++; // we only move to the next char if there is a match because current
-               // and the previous will be the same token.
-               // if there is no match the the previous will be tokened separately
+    current++; // we only move to the next char if there is a match.
+               // if there is no match then the previous will be tokened separately
                // and current separately, not the same token.
     return true;
   }
