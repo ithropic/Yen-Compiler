@@ -24,21 +24,12 @@ Yen uses **only `//` line comments**. There is deliberately no `/* ... */` comme
 
 ## VS Code
 
-The `vscode/` directory contains the VS Code extension.
+Yen provides a VS Code extension with syntax highlighting and `.yen` file detection.
 
-For normal installation, use the provided `.vsix` package:
-
-1. Open VS Code.
-2. Open the Extensions view.
-3. Select `...` → **Install from VSIX...**
-4. Select `yen-lang-support-0.1.0.vsix`.
-
-Alternatively, for local development, copy the extension directly:
-
-```bash
-cp -r vscode ~/.vscode/extensions/yen-lang-support-0.1.0
-```
-
-Then reload VS Code.
-
-The extension recognizes `.yen` files automatically and provides TextMate syntax highlighting.
+1. Download `yen-lang-support-0.1.0.vsix` from the Yen release.
+2. Open VS Code.
+3. Open the **Extensions** view (`Ctrl+Shift+X`).
+4. Click the **`...`** menu at the top of the Extensions panel.
+5. Select **Install from VSIX...**.
+6. Select the downloaded `yen-lang-support-0.1.0.vsix` file.
+7. Open a `.yen` file. Yen syntax highlighting should be enabled automatically.
