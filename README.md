@@ -57,7 +57,7 @@ You can then run:
 yen program.yen
 ```
 
-## Usage:
+## Usage
 Yen programs use the .yen file extension.
 
 For example: 
@@ -107,6 +107,19 @@ double average(double a, double b) {
     }
 
     print label;
+```
+
+Output:
+```
+0
+1
+2
+3
+4
+even or zero
+odd
+even and positive
+result
 ```
 
 This covers every type (`int`, `double`, `bool`, `string`, `void`), both loop
