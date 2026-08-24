@@ -2,11 +2,9 @@ package com.yen.compiler;
 
 import java.util.List;
 
-
 class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
-
-  // to keep track of the the current function return type inorder to 
+  // to keep track of the the current function's return type inorder to
   // compare it to with the type of the return statement.
   // null if we aren't inside any function.
   private Type currentFunctionReturnType = null;
@@ -29,10 +27,9 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     Compiler.error(token, message);
   }
 
-
   @Override
   public Void visitLiteralExpr(Expr.Literal expr) {
-    expr.type = switch(expr.value) {
+    expr.type = switch (expr.value) {
       case Integer i -> Type.INT;
       case Double d -> Type.DOUBLE;
       case String s -> Type.STRING;
@@ -67,13 +64,15 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     } else {
       expr.type = declaredType;
     }
-    
+
     return null;
   }
 
   private boolean isAssignable(Type from, Type to) {
-    if (from == to) return true;
-    if (from == Type.INT && to == Type.DOUBLE) return true;
+    if (from == to)
+      return true;
+    if (from == Type.INT && to == Type.DOUBLE)
+      return true;
     return false;
   }
 
@@ -86,7 +85,7 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     Type rightType = expr.right.type;
     TokenType op = expr.operator.type;
 
-    switch(op) {
+    switch (op) {
       case TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH -> {
 
         if (op == TokenType.PLUS && leftType == Type.STRING && rightType == Type.STRING) {
@@ -95,15 +94,15 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         if (isNumber(leftType) && isNumber(rightType)) {
-        
-        if (leftType == Type.DOUBLE || rightType == Type.DOUBLE) {
-          expr.type = Type.DOUBLE;
-          return null;
-        }
+
+          if (leftType == Type.DOUBLE || rightType == Type.DOUBLE) {
+            expr.type = Type.DOUBLE;
+            return null;
+          }
           expr.type = Type.INT;
           return null;
         }
-        
+
         error(expr.operator, "Operands must be two numbers or two strings.");
       }
 
@@ -117,16 +116,16 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
       case TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL -> {
         if (isNumber(leftType) && isNumber(rightType)) {
-            expr.type = Type.BOOL;
-            return null;
-         }
+          expr.type = Type.BOOL;
+          return null;
+        }
         if (leftType == rightType) {
           expr.type = Type.BOOL;
           return null;
         }
 
         error(expr.operator, "Both operands must be of the same type.");
-        }
+      }
     }
 
     return null;
@@ -139,16 +138,16 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   @Override
   public Void visitUnaryExpr(Expr.Unary expr) {
     check(expr.right);
-    if (expr.operator.type == TokenType.BANG){
+    if (expr.operator.type == TokenType.BANG) {
       if (expr.right.type == Type.BOOL) {
         expr.type = expr.right.type;
         return null;
       }
       error(expr.operator, "Negation requires a boolean type.");
-      
+
     } else if (expr.operator.type == TokenType.MINUS) {
 
-      if (isNumber(expr.right.type)){
+      if (isNumber(expr.right.type)) {
         expr.type = expr.right.type;
         return null;
       }
@@ -197,7 +196,7 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       error(expr.paren, "Argument count mismatch.");
       return null;
     }
-    
+
     for (int i = 0; i < expr.callee.symbol.paramTypes.size(); i++) {
       if (!isAssignable(expr.arguments.get(i).type, expr.callee.symbol.paramTypes.get(i))) {
         error(expr.paren, "Argument type incompatible with function's parameter type.");
@@ -223,12 +222,12 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return null;
       }
     } else {
-        if (currentFunctionReturnType != Type.VOID) {
-          error(stmt.keyword, "Return value: " + currentFunctionReturnType + " expected from a non void function.");
-          return null;
-        }
+      if (currentFunctionReturnType != Type.VOID) {
+        error(stmt.keyword, "Return value: " + currentFunctionReturnType + " expected from a non void function.");
+        return null;
       }
-    
+    }
+
     return null;
   }
 
@@ -252,18 +251,18 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     return null;
   }
 
-  @Override 
+  @Override
   public Void visitPrintStmt(Stmt.Print stmt) {
     check(stmt.expression);
     return null;
-  } 
+  }
 
-  @Override 
+  @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
     for (Stmt statement : stmt.statements) {
       check(statement);
     }
-    
+
     return null;
   }
 
@@ -275,11 +274,11 @@ class TypeChecker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     check(stmt.thenBranch);
-      if (stmt.elseBranch != null) {
-        check(stmt.elseBranch);
-      }
+    if (stmt.elseBranch != null) {
+      check(stmt.elseBranch);
+    }
 
-      return null;
+    return null;
   }
 
   @Override

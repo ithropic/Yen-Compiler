@@ -6,37 +6,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
-
 
   // Deque stands for double-ended-queue which we'll use as a fancy stack.
   private final ArrayDeque<Map<String, Symbol>> scopes = new ArrayDeque<>();
 
   // we'll assign each variable to an integer index slot.
-  // so we can completely get rid of varibale names and start 
+  // so we can completely get rid of varibale names and start
   // accessing them in an array using their indexes.
   // when we enter a function call a new call frame is pushed onto the call stack,
   // with its own new locals array, paramenters values,
   // and return address(instruction pointer to get back after the call)
   // inside the fucntion each time a variable is declared in a block
-  // we reserve the current free slot in the locals array. when we exit 
+  // we reserve the current free slot in the locals array. when we exit
   // the block the array shrinks and the slot is free to be used again.
-  
 
   // global single map.
   private final Map<String, Symbol> globals = new HashMap<>();
   private int nextGlobalSlot = 0;
 
-  // dynamic stack of maps used to assign each variable in a current scope
+  // stack of maps used to assign each variable in a current scope
   // to a slot number relative to the current scope.
-
   private int nextLocalSlot = 0;
   private final ArrayDeque<Integer> slotCheckPoints = new ArrayDeque<>();
-  
-
 
   void resolveProgram(List<Stmt> statements) {
+    // first pass to register function and global variables declarations.
     for (Stmt statement : statements) {
       if (statement instanceof Stmt.Function f) {
         Symbol sym = declare(f.name, f.type, Symbol.Kind.FUNCTION);
@@ -44,7 +39,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         f.symbol = sym;
       } else if (statement instanceof Stmt.Var v) {
         Symbol sym = declare(v.name, v.type, Symbol.Kind.VARIABLE);
-        define(v.name.lexeme);
+        define(v.name.lexeme); // forward reference support for globals
+        // at the cost of losing self initialization, accepted as a trade off.
         v.symbol = sym;
       }
     }
@@ -79,13 +75,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private Symbol declare(Token name, Type type, Symbol.Kind kind) {
     if (scopes.isEmpty()) { // global scope.
       if (globals.containsKey(name.lexeme)) {
-         error(name, "Global variable with this name already exist.");
+        error(name, "Global variable with this name already exist.");
       }
       Symbol sym = new Symbol(name.lexeme, type, kind, 0, nextGlobalSlot++);
       globals.put(name.lexeme, sym);
       return sym;
     } else {
-      Map<String, Symbol> scope = scopes.peek();
+      Map<String, Symbol> scope = scopes.peek(); // current scope.
       if (scope.containsKey(name.lexeme)) {
         error(name, "Variable with this name already exist in this scope.");
       }
@@ -94,12 +90,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       return sym;
     }
   }
-    
+
   private void define(String name) {
     if (scopes.isEmpty()) {
       globals.get(name).ready = true;
-    }
-    else {
+    } else {
       scopes.peek().get(name).ready = true;
     }
   }
@@ -108,19 +103,20 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     // starting from the top of the stack (the innermost scope).
     for (Map<String, Symbol> scope : scopes) {
       Symbol sym = scope.get(name.lexeme);
-      if (sym != null) return sym;
+      if (sym != null)
+        return sym;
     }
     Symbol sym = globals.get(name.lexeme);
-    if (sym != null) return sym;
+    if (sym != null)
+      return sym;
 
-    error(name, "Undefined identifier '" + name.lexeme + "'." );
+    error(name, "Undefined identifier '" + name.lexeme + "'.");
     return null;
   }
 
   private void error(Token token, String message) {
     Compiler.error(token, message);
   }
-
 
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
@@ -140,13 +136,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(stmt.initializer);
       }
     } else {
-        sym = declare(stmt.name, stmt.type, Symbol.Kind.VARIABLE);
-        if (stmt.initializer != null) {
-          resolve(stmt.initializer);
-        }
-        define(stmt.name.lexeme);
+      sym = declare(stmt.name, stmt.type, Symbol.Kind.VARIABLE);
+      if (stmt.initializer != null) {
+        resolve(stmt.initializer);
       }
-    
+      define(stmt.name.lexeme);
+    }
+
     stmt.symbol = sym;
     return null;
   }
@@ -157,7 +153,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       error(stmt.name, "Functions can only be declared at global scope.");
       return null;
     }
-    Symbol sym = globals.get(stmt.name.lexeme);
+    Symbol sym = globals.get(stmt.name.lexeme); // already registred on the first pass.
 
     List<Type> paramTypes = new ArrayList<>();
     for (Parameter p : stmt.params) {
@@ -168,10 +164,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     stmt.symbol = sym;
 
     int savedNextLocalSlot = nextLocalSlot;
-    nextLocalSlot = 0;
+    nextLocalSlot = 0; // because we're entering a function body
+    // and functions have their own locals.
     beginScope();
 
-    for (Parameter param : stmt.params) {
+    for (Parameter param : stmt.params) { // declaring parameters as the firs local variables.
       declare(param.name(), param.type(), Symbol.Kind.PARAMETER);
       define(param.name().lexeme);
     }
@@ -262,7 +259,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitIfStmt(Stmt.If stmt) {
     resolve(stmt.condition);
     resolve(stmt.thenBranch);
-    if (stmt.elseBranch  != null) {
+    if (stmt.elseBranch != null) {
       resolve(stmt.elseBranch);
     }
     return null;
@@ -282,7 +279,5 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     resolve(stmt.body);
     return null;
   }
-
-
 
 }

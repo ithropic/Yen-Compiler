@@ -13,12 +13,17 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     for (Stmt stmt : statements) {
       compile(stmt);
     }
-    emitByte(OpCode.OP_RETURN_VOID, 0); // temporarily, real end of program will be handled later.
+    emitByte(OpCode.OP_RETURN_VOID, 0); // to pop the main program callframe triggering termination.
     return chunk;
   }
 
-  private void compile(Expr expr) { expr.accept(this); }
-  private void compile(Stmt stmt) { stmt.accept(this); }
+  private void compile(Expr expr) {
+    expr.accept(this);
+  }
+
+  private void compile(Stmt stmt) {
+    stmt.accept(this);
+  }
 
   private void emitByte(byte b, int line) {
     chunk.writeByte(b, line);
@@ -57,54 +62,53 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     TokenType opType = operator.type;
     if (type == Type.INT) {
       switch (opType) {
-      case PLUS:
-        return OpCode.OP_ADD_INT;
-      case MINUS:
-        return OpCode.OP_SUBTRACT_INT;
-      case STAR:
-        return OpCode.OP_MULTIPLY_INT;
-      case SLASH:
-        return OpCode.OP_DIVIDE_INT;
-      default:
-        throw new IllegalArgumentException("Unknown binary operator type: " + opType);
+        case PLUS:
+          return OpCode.OP_ADD_INT;
+        case MINUS:
+          return OpCode.OP_SUBTRACT_INT;
+        case STAR:
+          return OpCode.OP_MULTIPLY_INT;
+        case SLASH:
+          return OpCode.OP_DIVIDE_INT;
+        default:
+          throw new IllegalArgumentException("Unknown binary operator type: " + opType);
       }
-    }
-    else if (type == Type.DOUBLE) {
+    } else if (type == Type.DOUBLE) {
       switch (opType) {
-      case PLUS:
-        return OpCode.OP_ADD_DOUBLE;
-      case MINUS:
-        return OpCode.OP_SUBTRACT_DOUBLE;
-      case STAR:
-        return OpCode.OP_MULTIPLY_DOUBLE;
-      case SLASH:
-        return OpCode.OP_DIVIDE_DOUBLE; 
-      default:
-        throw new IllegalArgumentException("Unknown binary operator type: " + opType);
+        case PLUS:
+          return OpCode.OP_ADD_DOUBLE;
+        case MINUS:
+          return OpCode.OP_SUBTRACT_DOUBLE;
+        case STAR:
+          return OpCode.OP_MULTIPLY_DOUBLE;
+        case SLASH:
+          return OpCode.OP_DIVIDE_DOUBLE;
+        default:
+          throw new IllegalArgumentException("Unknown binary operator type: " + opType);
 
       }
     } else if (type == Type.STRING && opType == TokenType.PLUS) {
-        return OpCode.OP_CONCAT;
-      } else if (type == Type.BOOL) {
-        switch(opType) {
-         case EQUAL_EQUAL:
-            return OpCode.OP_EQUAL_EQUAL;
-          case BANG_EQUAL:
-            return OpCode.OP_BANG_EQUAL;
-          case LESS:
-            return OpCode.OP_LESS;
-            case LESS_EQUAL:
-            return OpCode.OP_LESS_EQUAL;
-            case GREATER:
-            return OpCode.OP_GREATER;
-            case GREATER_EQUAL:
-            return OpCode.OP_GREATER_EQUAL;
-            default:
-            throw new IllegalArgumentException("Unknown binary operator: " + opType);
-        }
-      } else {
-          throw new IllegalArgumentException("Unsupported operand type for binary operator: " + type);
-        }
+      return OpCode.OP_CONCAT;
+    } else if (type == Type.BOOL) {
+      switch (opType) {
+        case EQUAL_EQUAL:
+          return OpCode.OP_EQUAL_EQUAL;
+        case BANG_EQUAL:
+          return OpCode.OP_BANG_EQUAL;
+        case LESS:
+          return OpCode.OP_LESS;
+        case LESS_EQUAL:
+          return OpCode.OP_LESS_EQUAL;
+        case GREATER:
+          return OpCode.OP_GREATER;
+        case GREATER_EQUAL:
+          return OpCode.OP_GREATER_EQUAL;
+        default:
+          throw new IllegalArgumentException("Unknown binary operator: " + opType);
+      }
+    } else {
+      throw new IllegalArgumentException("Unsupported operand type for binary operator: " + type);
+    }
   }
 
   @Override
@@ -121,17 +125,18 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   private byte pickUnaryOpCode(Token op, Type type) {
-    if (op.type == TokenType.BANG) return OpCode.OP_NOT;
+    if (op.type == TokenType.BANG)
+      return OpCode.OP_NOT;
     if (op.type == TokenType.MINUS) {
       if (type == Type.INT) {
         return OpCode.OP_NEGATE_INT;
       } else if (type == Type.DOUBLE) {
         return OpCode.OP_NEGATE_DOUBLE;
       } else {
-       throw new IllegalArgumentException("Cannot negate type: " + type);
+        throw new IllegalArgumentException("Cannot negate type: " + type);
       }
     } else {
-       throw new IllegalArgumentException("Unknown unary operator type: " + op.type);
+      throw new IllegalArgumentException("Unknown unary operator type: " + op.type);
     }
   }
 
@@ -190,19 +195,29 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private Object zeroValue(Type type) {
     switch (type) {
-      case INT: return 0;
-      case DOUBLE: return 0.0;
-      case BOOL: return false;
-      case STRING: return "";
-      default: throw new IllegalArgumentException("No default initializer for type: " + type);
+      case INT:
+        return 0;
+      case DOUBLE:
+        return 0.0;
+      case BOOL:
+        return false;
+      case STRING:
+        return "";
+      default:
+        throw new IllegalArgumentException("No default initializer for type: " + type);
     }
   }
 
   @Override
   public Void visitExpressionStmt(Stmt.Expression stmt) {
     compile(stmt.expression);
+    // if a function is called and it doesn't return anything there is nothing to
+    // pop. (void functions don't leave a value on the stack.)
+    // the resulted value from evaluating the expression stmt must be removed from
+    // stack, because the stack must stay clean and balanced,
+    // meaning any value is popped after it is used and its job is done.
     if (!(stmt.expression instanceof Expr.Call call && call.type == Type.VOID)) {
-    emitByte(OpCode.OP_POP, stmt.line);
+      emitByte(OpCode.OP_POP, stmt.line);
     }
     return null;
   }
@@ -221,11 +236,12 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       emitByte(OpCode.OP_JUMP_IF_FALSE, expr.operator.line); // short-circuit.
       emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
       int offset = chunk.count - 2;
-      
+
       emitByte(OpCode.OP_POP, expr.operator.line);
 
       compile(expr.right);
       int jumpDistance = chunk.count - offset - 2;
+      // big endian.
       chunk.patchByte(offset, (byte) ((jumpDistance >> 8) & 0xFF));
       chunk.patchByte(offset + 1, (byte) (jumpDistance & 0xFF));
     } else if (expr.operator.type == TokenType.OR) {
@@ -235,31 +251,36 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
       int falseOffset = chunk.count - 2;
 
+      // double jump to handle the or short circuit.
+      // if left side is true to we jump unconditionally skipping the right side.
+      // if left side is false we skip past the unconditional jump,
+      // pop the false on top of the stack and evaluate the right side.
       emitByte(OpCode.OP_JUMP, expr.operator.line);
       emitBytes((byte) 0xFF, (byte) 0xFF, expr.operator.line);
       int offset = chunk.count - 2;
-
-      emitByte(OpCode.OP_POP, expr.operator.line);
 
       int falseJumpDistance = chunk.count - falseOffset - 2;
       chunk.patchByte(falseOffset, (byte) ((falseJumpDistance >> 8) & 0xFF));
       chunk.patchByte(falseOffset + 1, (byte) (falseJumpDistance & 0xFF));
 
+      emitByte(OpCode.OP_POP, expr.operator.line);
 
       compile(expr.right);
       int jumpDistance = chunk.count - offset - 2;
       chunk.patchByte(offset, (byte) ((jumpDistance >> 8) & 0xFF));
       chunk.patchByte(offset + 1, (byte) (jumpDistance & 0xFF));
     } else {
-       throw new IllegalArgumentException("Unknown logical operator: " + expr.operator.type);
+      throw new IllegalArgumentException("Unknown logical operator: " + expr.operator.type);
     }
-    
+
     return null;
   }
-  
 
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
+    // we need to keep track of how many local variables exist inside each scope
+    // to emit the corresponding number of pop instructions inorder to keep the
+    // stack balanced.
     localCountStack.push(0);
     for (Stmt statement : stmt.statements) {
       compile(statement);
@@ -270,7 +291,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
     return null;
   }
-  
+
   @Override
   public Void visitIfStmt(Stmt.If stmt) {
     compile(stmt.condition);
@@ -283,29 +304,27 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     int elseJumpOffset = 0;
     if (stmt.elseBranch != null) {
-    emitByte(OpCode.OP_JUMP, stmt.keyword.line);
-    emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line);
-    elseJumpOffset = chunk.count - 2;
+      emitByte(OpCode.OP_JUMP, stmt.keyword.line);
+      emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line);
+      elseJumpOffset = chunk.count - 2;
     }
 
-
     int jumpDistance = chunk.count - jumpOffset - 2;
-    chunk.patchByte(jumpOffset, (byte) ((jumpDistance >> 8) & 0xFF)); // update the JUMP_IF_FALSE offset 
-                                                              // to jump after the if block and the unconditional JUMP
-                                                              // directly inside the else block after we know its size.
+    chunk.patchByte(jumpOffset, (byte) ((jumpDistance >> 8) & 0xFF)); // update the JUMP_IF_FALSE offset
+    // to jump after the if block and the unconditional JUMP
+    // directly inside the else block after we know its size.
     chunk.patchByte(jumpOffset + 1, (byte) ((jumpDistance) & 0xFF));
 
     emitByte(OpCode.OP_POP, stmt.keyword.line);
 
     if (stmt.elseBranch != null) {
-    compile(stmt.elseBranch);
-    jumpDistance = chunk.count - elseJumpOffset - 2; // update the unconditional JUMP offset
-                                                     // to jump past the else block if the condition is true.
-                                                     // this jump will be executed directly after the if block
-                                                     // if the condition is true and we jump past it
-                                                     // to execute the else block if the condition is false.
-    chunk.patchByte(elseJumpOffset, (byte) ((jumpDistance >> 8) & 0xFF));
-    chunk.patchByte(elseJumpOffset + 1, (byte) ((jumpDistance) & 0xFF)); 
+      compile(stmt.elseBranch);
+      jumpDistance = chunk.count - elseJumpOffset - 2; // update the unconditional JUMP offset
+                                                       // to jump past the else block if the condition is true.
+                                                       // this jump will be executed directly after the if block
+                                                       // if the condition is true.
+      chunk.patchByte(elseJumpOffset, (byte) ((jumpDistance >> 8) & 0xFF));
+      chunk.patchByte(elseJumpOffset + 1, (byte) ((jumpDistance) & 0xFF));
     }
 
     return null;
@@ -319,13 +338,13 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     emitBytes((byte) 0xFF, (byte) 0xFF, stmt.keyword.line);
     int offset = chunk.count - 2;
 
-    emitByte(OpCode.OP_POP, stmt.keyword.line);
+    emitByte(OpCode.OP_POP, stmt.keyword.line); // condition is true at this point.
 
     compile(stmt.body);
 
-
     emitByte(OpCode.OP_LOOP, stmt.keyword.line);
-    int loopDistance = chunk.count - loopStart + 2; // +2 because you need to take into consideration the two bytes emitted after.
+    int loopDistance = chunk.count - loopStart + 2; // +2 because you need to take into consideration the two bytes
+                                                    // emitted after.
     emitBytes((byte) (((loopDistance) >> 8) & 0xFF), (byte) ((loopDistance) & 0xFF), stmt.keyword.line);
 
     int jumpDistance = chunk.count - offset - 2;
@@ -355,7 +374,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     chunk = new Chunk();
 
     localCountStack.push(0);
-    
+
     for (Stmt statement : stmt.body) {
       compile(statement);
     }
@@ -372,7 +391,7 @@ class BytecodeCompiler implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     return null;
   }
-  
+
   @Override
   public Void visitCallExpr(Expr.Call expr) {
     compile(expr.callee);
