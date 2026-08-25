@@ -65,7 +65,7 @@ For example:
 cat yen_features.yen
 ```
 
-```yen
+```C
 
 // comment
 
