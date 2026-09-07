@@ -1,7 +1,11 @@
-# Yen 
+# Yen
+
 A statically-typed, bytecode-compiled scripting programming language that runs on a custom VM, implemented in Java.
 
+Full walkthrough: [docs/yenDocument.pdf](docs/yenDocument.pdf)
+
 ## Installation
+
 Download the appropriate executable from [Yen releases](https://github.com/ithropic/Yen-Compiler/releases/tag/v0.1.0). No Java installation required - these are native executables.
 
 **Linux x86_64:**
@@ -13,6 +17,7 @@ Place both files on the same directory and run:
 chmod +x install.sh 
 ./install.sh 
 ```
+
 The installer place the Yen executable at:
 
 ~/.local/bin/yen
@@ -58,9 +63,11 @@ yen program.yen
 ```
 
 ## Usage
+
 Yen programs use the .yen file extension.
 
-For example: 
+For example:
+
 ```bash
 cat yen_features.yen
 ```
@@ -110,6 +117,7 @@ double average(double a, double b) {
 ```
 
 Output:
+
 ```
 0
 1
@@ -128,7 +136,7 @@ types, recursion, `and`/`or`/`!`, comparison and arithmetic operators, and
 `print`.
 
 ## Editor support
- 
+
 Syntax highlighting for `.yen` files is available for VS Code and Neovim.
 See [`yen-lang-support/README.md`](./yen-lang-support/README.md) for install
 steps, or grab the packaged VS Code extension from the
@@ -136,23 +144,24 @@ steps, or grab the packaged VS Code extension from the
 (`yen-lang-support-0.1.0.vsix`).
 
 ## Building from source
- 
+
 Requires Java 21+ and Maven.
- 
+
 ```bash
 git clone https://github.com/ithropic/Yen-Compiler.git
 cd Yen-Compiler
 mvn clean package
 java -jar target/yen-0.1.0.jar hello.yen
 ```
- 
+
 To build a native executable yourself (requires
 [GraalVM for JDK 21](https://www.graalvm.org/downloads/) and its
 Native Image component):
+
 ```bash
 native-image -jar target/yen-0.1.0.jar
 ```
- 
+
 ## License
- 
+
 MIT — see [LICENSE](./LICENSE).
