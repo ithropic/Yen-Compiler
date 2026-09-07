@@ -62,6 +62,8 @@ You can then run:
 yen program.yen
 ```
 
+<video src="https://github.com/user-attachments/assets/d611a893-512c-45ad-9e0c-d9ec6ef18348" width="100%"></video>
+
 ## Usage
 
 Yen programs use the .yen file extension.
@@ -134,8 +136,6 @@ This covers every type (`int`, `double`, `bool`, `string`, `void`), both loop
 forms, `if`/`else if`/`else`, function declarations with explicit return
 types, recursion, `and`/`or`/`!`, comparison and arithmetic operators, and
 `print`.
-
-<video src="https://github.com/user-attachments/assets/d611a893-512c-45ad-9e0c-d9ec6ef18348" width="100%"></video>
 
 ## Editor support
 
