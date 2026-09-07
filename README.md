@@ -62,7 +62,7 @@ You can then run:
 yen program.yen
 ```
 
-<video src="https://github.com/user-attachments/assets/d611a893-512c-45ad-9e0c-d9ec6ef18348" width="100%"></video>
+<video src="https://github.com/user-attachments/assets/d611a893-512c-45ad-9e0c-d9ec6ef18348" autoplay loop muted playsinline width="100%"></video>
 
 ## Usage
 
