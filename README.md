@@ -135,7 +135,7 @@ forms, `if`/`else if`/`else`, function declarations with explicit return
 types, recursion, `and`/`or`/`!`, comparison and arithmetic operators, and
 `print`.
 
-<video src="assets/demo.mp4" width="100%"></video>
+<video src="https://github.com/ithropic/Yen-Compiler/blob/main/assets/demo.mp4" width="100%"></video>
 
 ## Editor support
 
