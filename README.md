@@ -135,6 +135,8 @@ forms, `if`/`else if`/`else`, function declarations with explicit return
 types, recursion, `and`/`or`/`!`, comparison and arithmetic operators, and
 `print`.
 
+<video src="assets/demo.mp4" width="100%"></video>
+
 ## Editor support
 
 Syntax highlighting for `.yen` files is available for VS Code and Neovim.
